@@ -17,4 +17,22 @@ time_points = [start_time + datetime.timedelta(hours=i) for i in range(168)]
 
 print(time_points[:5])
 
+def add_moisture_simulation():
+    moisture = []
+    for i in range(168):
+        if i < 24:
+            moisture.append(random.uniform(0, 30))  # Introduce randomness within range
+        elif i < 40:
+            moisture.append(random.uniform(30, 50))
+        elif i < 60:
+            moisture.append(random.uniform(50, 70))
+        elif i < 80:
+            moisture.append(random.uniform(70, 90))
+        else:
+            moisture.append(random.uniform(90, 100))
+    return moisture
+
+
+    
+
 
