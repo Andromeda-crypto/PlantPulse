@@ -10,29 +10,54 @@ import matplotlib.pyplot as plt
 from datetime import timedelta
 import math
 
+
 np.random.seed(42)
 
-start_time = datetime.datetime(2025,3,1,0,0)
-time_points = [start_time + datetime.timedelta(hours=i) for i in range(168)]
 
-print(time_points[:5])
+start_time = datetime.datetime(2025, 3, 1, 0, 0)
+time_points = [start_time + timedelta(hours=i) for i in range(168)]
 
+# Create soil moisture data
 def add_moisture_simulation():
-    moisture = []
-    for i in range(168):
-        if i < 24:
-            moisture.append(random.uniform(0, 30))  # Introduce randomness within range
-        elif i < 40:
-            moisture.append(random.uniform(30, 50))
-        elif i < 60:
-            moisture.append(random.uniform(50, 70))
-        elif i < 80:
-            moisture.append(random.uniform(70, 90))
+    moisture = [50]  
+    for i in range(167):  
+        if (i + 1) % 72 == 0:  
+            moisture.append(70)
         else:
-            moisture.append(random.uniform(90, 100))
+            last_value = moisture[-1]  
+            new_value = last_value - np.random.uniform(0.5, 2)
+            if new_value < 20:
+                new_value = 20
+            elif new_value > 80:
+                new_value = 80
+            moisture.append(new_value)
     return moisture
 
+def add_light_simulation():
+    light = []
+    for i in range(168):
+        '''
+        Calculate a base value with a sine wave:
+Use a 24-hour cycle (peaks at noon, dips at midnight).
 
+Center it around 500 lux, with a range up to 1000 (so it swings from 0 to 1000).
+
+Use the loop counter (hour) and adjust it with π divided by 12 to fit the 24-hour period.
+'''
+        base_value = 500 + 500 * math.sin(math.pi *i / 12)
+        
+
+
+
+
+moisture_level = add_moisture_simulation()
+Data = pd.DataFrame({
+    'Timestamp' : time_points,
+    'Soil_moisture' : moisture_level,
+})
+
+print(Data.head())
+print(Data.iloc[70:75])
     
 
 
