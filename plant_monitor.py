@@ -1,7 +1,6 @@
 # purpose of this file is to simulate and generate fake sensor which will create data
 # such as soil moisture, light, temperature) over 7 days with hourly readings (168 total points).
 
-import random
 import datetime
 import time
 import numpy as np
@@ -37,8 +36,17 @@ def add_light_simulation():
     light = []
     for i in range(168):
         base_value = 500 + 500 * math.sin(math.pi *i / 12)
-        
+        light_value = base_value + np.random.uniform(-50,50)
+        if light_value < 0:
+            light_value = 0
+        elif light_value > 1000:
+            light_value = 1000
+        else:
+            light_value = light_value
 
+        light.append(light_value)
+
+    return light
 
 
 
