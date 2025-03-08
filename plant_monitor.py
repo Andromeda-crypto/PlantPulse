@@ -50,11 +50,29 @@ def add_light_simulation():
 
 
 
+def add_temperature_simulation():
+    # similar logic to light using sin wave to simulate temperature
+    temperature = []
+    for i in range(168):
+        base_value = 20 + 10 * math.sin(math.pi * i/12)
+        temperature_value = base_value * np.random.uniform(-5,5)
+        if temperature_value < 0:
+            temperature_value = 0
+        elif temperature_value > 40:
+            temperature_value = 40
+        else:
+            return
+        temperature.append(temperature_value)
+
 
 moisture_level = add_moisture_simulation()
+light = add_light_simulation
+temperasture = add_temperature_simulation()
 Data = pd.DataFrame({
     'Timestamp' : time_points,
     'Soil_moisture' : moisture_level,
+    'Light_level' : light,
+    'Temperature' : temperasture
 })
 
 print(Data.head())
