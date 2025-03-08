@@ -63,6 +63,9 @@ def add_temperature_simulation():
         else:
             return
         temperature.append(temperature_value)
+    return temperature
+
+
 
 
 moisture_level = add_moisture_simulation()
