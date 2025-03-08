@@ -36,16 +36,9 @@ def add_moisture_simulation():
 def add_light_simulation():
     light = []
     for i in range(168):
-        '''
-        Calculate a base value with a sine wave:
-Use a 24-hour cycle (peaks at noon, dips at midnight).
-
-Center it around 500 lux, with a range up to 1000 (so it swings from 0 to 1000).
-
-Use the loop counter (hour) and adjust it with π divided by 12 to fit the 24-hour period.
-'''
         base_value = 500 + 500 * math.sin(math.pi *i / 12)
         
+
 
 
 
