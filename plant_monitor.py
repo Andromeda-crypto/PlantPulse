@@ -41,9 +41,6 @@ def add_light_simulation():
             light_value = 0
         elif light_value > 1000:
             light_value = 1000
-        else:
-            light_value = light_value
-
         light.append(light_value)
 
     return light
@@ -54,32 +51,39 @@ def add_temperature_simulation():
     # similar logic to light using sin wave to simulate temperature
     temperature = []
     for i in range(168):
-        base_value = 20 + 10 * math.sin(math.pi * i/12)
-        temperature_value = base_value * np.random.uniform(-5,5)
+        base_value = 22 + 5 * math.sin(math.pi * i/12)
+        temperature_value = base_value + np.random.uniform(-1,1)
         if temperature_value < 0:
             temperature_value = 0
         elif temperature_value > 40:
             temperature_value = 40
-        else:
-            return
+        
         temperature.append(temperature_value)
     return temperature
+    
+# health check function
+
+def check_health(moisture,light,temperature):
+    # check for moisture first, if it is low no need to check for the rest
+    
+        
 
 
-
-
+# testing
 moisture_level = add_moisture_simulation()
-light = add_light_simulation
-temperasture = add_temperature_simulation()
+light = add_light_simulation()
+temperature = add_temperature_simulation()
 Data = pd.DataFrame({
     'Timestamp' : time_points,
-    'Soil_moisture' : moisture_level,
-    'Light_level' : light,
-    'Temperature' : temperasture
+    'Soilmoisture' : moisture_level,
+    'Lightlevel' : light,
+    'Temperature' : temperature
 })
 
 print(Data.head())
+print(Data.iloc[10:15]) # midday peak
+print(Data.iloc[22:26]) # midnight low
 print(Data.iloc[70:75])
-    
+print(Data.iloc[163:168]) # testing to see the last 5 data points
 
 
