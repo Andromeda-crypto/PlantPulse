@@ -67,23 +67,21 @@ def check_health(moisture,light,temperature):
     # check for moisture first, if it is low no need to check for the rest
     # need to prioritize mositure because it is critical for plant health
     if moisture < 30:
-        print ('Low moisture\nPlant needs more water.')
+      return 'Low moisture\nPlant needs more water.'
     if light < 200:
-        print ('Low light\nPlant needs more light.')
+        return 'Low light\nPlant needs more light.'
     if temperature > 28:
-        print('Too Hot\nPlant should be exposed to less heat.')
+       return 'Too Hot\nPlant should be exposed to less heat.'
     return 'Plant is healthy.All Good!'
 
     
-
-        
 
 
 # testing
 moisture_level = add_moisture_simulation()
 light = add_light_simulation()
 temperature = add_temperature_simulation()
-health = check_health(moisture_level[0],light[0],temperature[0])
+health = check_health(moisture_level,light,temperature)
 Data = pd.DataFrame({
     'Timestamp' : time_points,
     'Soilmoisture' : moisture_level,
