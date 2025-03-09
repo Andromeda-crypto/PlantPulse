@@ -74,6 +74,8 @@ def check_health(moisture,light,temperature):
        return 'Too Hot\nPlant should be exposed to less heat.'
     return 'Plant is healthy.All Good!'
 
+
+
     
 
 
@@ -86,9 +88,9 @@ Data = pd.DataFrame({
     'Timestamp' : time_points,
     'Soilmoisture' : moisture_level,
     'Lightlevel' : light,
-    'Temperature' : temperature,
-    'Health_status': health
-})
+    'Temperature' : temperature
+    })
+pd.axis('health=1')
 
 print(Data.head())
 print(Data.iloc[10:15]) # midday peak
