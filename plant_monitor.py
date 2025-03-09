@@ -67,12 +67,12 @@ def check_health(moisture,light,temperature):
     # check for moisture first, if it is low no need to check for the rest
     # need to prioritize mositure because it is critical for plant health
     if moisture < 30:
-      return 'Low moisture.Plant needs more water.'
+      return 'Low moisture Plant needs more water'
     if light < 200:
-        return 'Low light.Plant needs more light.'
+        return 'Low light Plant needs more light'
     if temperature > 28:
-       return 'Too Hot.Plant should be exposed to less heat.'
-    return 'Plant is healthy.All Good!'
+       return 'Too Hot Plant should be exposed to less heat'
+    return 'Plant is healthy All Good!'
 
 
 
