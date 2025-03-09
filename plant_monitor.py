@@ -77,31 +77,42 @@ def check_health(moisture,light,temperature):
 def plot_plant_data():
     # plotting the data
 
-    plt.figure(figsize= (12,10))
-    plt.subplot(3,1,1)
-    plt.plot(Data['Timestamp'],Data['Soilmoisture'],label = 'Soil Moisture',color= 'blue')
+    plt.figure(figsize=(12, 10))
+
+    # Top plot: Soilmoisture with Low moisture markers
+    plt.subplot(3, 1, 1)
+    plt.plot(Data['Timestamp'], Data['Soilmoisture'], color='blue', label='Soil Moisture')
+    low_moisture = Data[Data['Health_status'] == 'Low moisture Plant needs more water.']
+    plt.scatter(low_moisture['Timestamp'], low_moisture['Soilmoisture'], color='red', label='Low moisture', s=50)
     plt.xlabel('Time')
-    plt.ylabel('Moisture(%)')
-    plt.title('SOil Moisture over time')
+    plt.ylabel('Moisture (%)')
+    plt.title('Soil Moisture Over Time')
     plt.legend()
     plt.grid(True)
 
-    plt.subplot(3,1,2)
-    plt.plot(Data['Timestamp'],Data['Lightlevel'], color = 'orange',label='Light Level')
-    plt.xlabel("Time")
-    plt.ylabel("Light (lux)")
-    plt.title('Light levels over time')
+    # Middle plot: Lightlevel with Low light markers
+    plt.subplot(3, 1, 2)
+    plt.plot(Data['Timestamp'], Data['Lightlevel'], color='orange', label='Light Level')
+    low_light = Data[Data['Health_status'] == 'Low light Plant needs more light.']
+    plt.scatter(low_light['Timestamp'], low_light['Lightlevel'], color='yellow', label='Low light', s=50)
+    plt.xlabel('Time')
+    plt.ylabel('Light (lux)')
+    plt.title('Light Level Over Time')
     plt.legend()
     plt.grid(True)
 
-    plt.subplot(3,1,3)
-    plt.plot(Data['Timestamp'],Data['Temperature'],label = 'Temperature', color = 'red')
+    # Bottom plot: Temperature with Too Hot markers
+    plt.subplot(3, 1, 3)
+    plt.plot(Data['Timestamp'], Data['Temperature'], color='red', label='Temperature')
+    too_hot = Data[Data['Health_status'] == 'Too Hot Plant should be exposed to less heat.']
+    plt.scatter(too_hot['Timestamp'], too_hot['Temperature'], color='purple', label='Too Hot', s=50)
     plt.xlabel('Time')
     plt.ylabel('Temperature (°C)')
-    plt.title('Temperature over time')
+    plt.title('Temperature Over Time')
     plt.legend()
     plt.grid(True)
 
+    # Adjust layout and show
     plt.tight_layout()
     plt.show()
    
@@ -117,7 +128,7 @@ Data = pd.DataFrame({
     'Temperature' : temperature
     })
 Data['Health_status'] = Data.apply(lambda row: check_health(row['Soilmoisture'],row['Lightlevel'],row['Temperature']),axis = 1)
-
+plot_plant_data(Data) 
 
 
 print(Data.head())
