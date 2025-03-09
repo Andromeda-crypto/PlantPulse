@@ -79,7 +79,7 @@ def plot_plant_data():
 
     plt.figure(figsize=(12, 10))
 
-    # Top plot: Soilmoisture with Low moisture markers
+    # Soilmoisture with Low moisture markers
     plt.subplot(3, 1, 1)
     plt.plot(Data['Timestamp'], Data['Soilmoisture'], color='blue', label='Soil Moisture')
     low_moisture = Data[Data['Health_status'] == 'Low moisture Plant needs more water.']
@@ -90,7 +90,7 @@ def plot_plant_data():
     plt.legend()
     plt.grid(True)
 
-    # Middle plot: Lightlevel with Low light markers
+    #  Lightlevel with Low light markers
     plt.subplot(3, 1, 2)
     plt.plot(Data['Timestamp'], Data['Lightlevel'], color='orange', label='Light Level')
     low_light = Data[Data['Health_status'] == 'Low light Plant needs more light.']
@@ -101,7 +101,7 @@ def plot_plant_data():
     plt.legend()
     plt.grid(True)
 
-    # Bottom plot: Temperature with Too Hot markers
+    #  Temperature with Too Hot markers
     plt.subplot(3, 1, 3)
     plt.plot(Data['Timestamp'], Data['Temperature'], color='red', label='Temperature')
     too_hot = Data[Data['Health_status'] == 'Too Hot Plant should be exposed to less heat.']
@@ -128,7 +128,7 @@ Data = pd.DataFrame({
     'Temperature' : temperature
     })
 Data['Health_status'] = Data.apply(lambda row: check_health(row['Soilmoisture'],row['Lightlevel'],row['Temperature']),axis = 1)
-plot_plant_data(Data) 
+plot_plant_data() 
 
 
 print(Data.head())
