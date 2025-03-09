@@ -74,9 +74,38 @@ def check_health(moisture,light,temperature):
        return 'Too Hot Plant should be exposed to less heat'
     return 'Plant is healthy All Good!'
 
+def plot_plant_data():
+    # plotting the data
 
+    plt.figure(figsize= (12,10))
+    plt.subplot(3,1,1)
+    plt.plot(Data['Timestamp'],Data['Soilmoisture'],label = 'Soil Moisture',color= 'blue')
+    plt.xlabel('Time')
+    plt.ylabel('Moisture(%)')
+    plt.title('SOil Moisture over time')
+    plt.legend()
+    plt.grid(True)
 
+    plt.subplot(3,1,2)
+    plt.plot(Data['Timestamp'],Data['Lightlevel'], color = 'orange',label='Light Level')
+    plt.xlabel("Time")
+    plt.ylabel("Light (lux)")
+    plt.title('Light levels over time')
+    plt.legend()
+    plt.grid(True)
 
+    plt.subplot(3,1,3)
+    plt.plot(Data['Timestamp'],Data['Temperature'],label = 'Temperature', color = 'red')
+    plt.xlabel('Time')
+    plt.ylabel('Temperature (°C)')
+    plt.title('Temperature over time')
+    plt.legend()
+    plt.grid(True)
+
+    plt.tight_layout()
+    plt.show()
+   
+    
 # testing
 moisture_level = add_moisture_simulation()
 light = add_light_simulation()
@@ -96,5 +125,6 @@ print(Data.iloc[10:15]) # midday peak
 print(Data.iloc[22:26]) # midnight low
 print(Data.iloc[70:75])
 print(Data.iloc[163:168]) # testing to see the last 5 data points
+
 
 
