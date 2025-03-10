@@ -130,7 +130,11 @@ Data = pd.DataFrame({
 Data['Health_status'] = Data.apply(lambda row: check_health(row['Soilmoisture'],row['Lightlevel'],row['Temperature']),axis = 1)
 
 plot_plant_data(Data)
-Data.to_csv('plant_data.csv',index = False)
+# save with unique file names
+current_time = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M')  
+filename = f'plant_data_{current_time}.csv'  #\
+Data.to_csv(filename, index=False)
+print(f"Data saved to {filename}")
 print('Data saved to CSV  file.')
 print(Data.head())
 print(Data.iloc[10:15]) # midday peak
