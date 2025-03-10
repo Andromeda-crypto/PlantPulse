@@ -74,7 +74,7 @@ def check_health(moisture,light,temperature):
        return 'Too Hot Plant should be exposed to less heat'
     return 'Plant is healthy All Good!'
 
-def plot_plant_data():
+def plot_plant_data(data):
     # plotting the data
 
     plt.figure(figsize=(12, 10))
@@ -128,7 +128,13 @@ Data = pd.DataFrame({
     'Temperature' : temperature
     })
 Data['Health_status'] = Data.apply(lambda row: check_health(row['Soilmoisture'],row['Lightlevel'],row['Temperature']),axis = 1)
-plot_plant_data() 
+print("Plotting now")
+plot_plant_data(Data)
+print('Done')
+
+
+
+
 
 
 print(Data.head())
