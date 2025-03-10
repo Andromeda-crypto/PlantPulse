@@ -130,12 +130,33 @@ Data = pd.DataFrame({
 Data['Health_status'] = Data.apply(lambda row: check_health(row['Soilmoisture'],row['Lightlevel'],row['Temperature']),axis = 1)
 
 plot_plant_data(Data)
-# save with unique file names
-current_time = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M')  
-filename = f'plant_data_{current_time}.csv'  #\
+current_time = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M')  # e.g., 2025-03-10_15-45
+filename = f'plant_data_{current_time}.csv'  # e.g., plant_data_2025-03-10_15-45.csv
 Data.to_csv(filename, index=False)
 print(f"Data saved to {filename}")
-print('Data saved to CSV  file.')
+
+# ADDING A PREDICTIVE MODEL TO TELL US WHEN THE PLANT WILL NEED WATER
+# The model will use the moisture data to predict when the plant will need water
+'''Grab the last moisture and timestamp from Data.
+
+Calculate the drop rate from recent data (e.g., last 10 hours).
+
+Predict hours to 20% and add it to the last timestamp.
+
+Print the result.
+
+'''
+
+last_moisture = Data['Soilmoisture'].iloc[-1]
+#drop rate
+drop_rate = Data['Soilmoisture'].iloc[-10:].diff().mean()
+hours_to_20 = (20 - last_moisture) / drop_rate
+next_time = Data['Timestamp'].iloc[-1] + timedelta(hours=hours_to_20)
+print(f'Next watering time : {next_time}')
+
+
+
+
 print(Data.head())
 print(Data.iloc[10:15]) # midday peak
 print(Data.iloc[22:26]) # midnight low
