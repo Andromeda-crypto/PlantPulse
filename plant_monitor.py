@@ -137,30 +137,26 @@ print(f"Data saved to {filename}")
 
 # ADDING A PREDICTIVE MODEL TO TELL US WHEN THE PLANT WILL NEED WATER
 # The model will use the moisture data to predict when the plant will need water
-'''Grab the last moisture and timestamp from Data.
-
-Calculate the drop rate from recent data (e.g., last 10 hours).
-
-Predict hours to 20% and add it to the last timestamp.
-
-Print the result.
-
-'''
 
 last_moisture = Data['Soilmoisture'].iloc[-1]
-#drop rate
 drop_rate = Data['Soilmoisture'].iloc[-10:].diff().mean()
-hours_to_20 = (20 - last_moisture) / drop_rate
-next_time = Data['Timestamp'].iloc[-1] + timedelta(hours=hours_to_20)
-print(f'Next watering time : {next_time}')
+print(f"Last moisture: {last_moisture}")
+print(f"Drop rate: {drop_rate}")
+
+if last_moisture < 20:
+    print(f"Water now at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}!")
+else:
+    hours_to_20 = (20 - last_moisture) / drop_rate
+    hours_to_20_rounded = round(hours_to_20)
+    next_time = datetime.datetime.now() + timedelta(hours=hours_to_20)
+    next_time_str = next_time.strftime('%Y-%m-%d %H:%M')
+    print(f"Water in {hours_to_20_rounded} hours at {next_time_str}")
 
 
-
-
-print(Data.head())
+'''print(Data.head())
 print(Data.iloc[10:15]) # midday peak
 print(Data.iloc[22:26]) # midnight low
 print(Data.iloc[70:75])
-print(Data.iloc[163:168]) # testing to see the last 5 data points
+print(Data.iloc[163:168]) # testing to see the last 5 data points'''
 
 
