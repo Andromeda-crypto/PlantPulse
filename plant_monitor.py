@@ -82,8 +82,8 @@ def plot_plant_data(data):
     # Soilmoisture with Low moisture markers
     plt.subplot(3, 1, 1)
     plt.plot(Data['Timestamp'], Data['Soilmoisture'], color='blue', label='Soil Moisture')
-    low_moisture = Data[Data['Health_status'] == 'Low moisture Plant needs more water.']
-    plt.scatter(low_moisture['Timestamp'], low_moisture['Soilmoisture'], color='red', label='Low moisture', s=50)
+    low_moisture = Data[Data['Health_status'] == 'Low moisture Plant needs more water']
+    plt.scatter(low_moisture['Timestamp'],low_moisture['Soilmoisture'], color='red', label='Low Moisture', s=50)
     plt.xlabel('Time')
     plt.ylabel('Moisture (%)')
     plt.title('Soil Moisture Over Time')
@@ -93,7 +93,7 @@ def plot_plant_data(data):
     #  Lightlevel with Low light markers
     plt.subplot(3, 1, 2)
     plt.plot(Data['Timestamp'], Data['Lightlevel'], color='orange', label='Light Level')
-    low_light = Data[Data['Health_status'] == 'Low light Plant needs more light.']
+    low_light = Data[Data['Health_status'] == 'Low light Plant needs more light']
     plt.scatter(low_light['Timestamp'], low_light['Lightlevel'], color='yellow', label='Low light', s=50)
     plt.xlabel('Time')
     plt.ylabel('Light (lux)')
@@ -104,7 +104,7 @@ def plot_plant_data(data):
     #  Temperature with Too Hot markers
     plt.subplot(3, 1, 3)
     plt.plot(Data['Timestamp'], Data['Temperature'], color='red', label='Temperature')
-    too_hot = Data[Data['Health_status'] == 'Too Hot Plant should be exposed to less heat.']
+    too_hot = Data[Data['Health_status'] == 'Too Hot Plant should be exposed to less heat']
     plt.scatter(too_hot['Timestamp'], too_hot['Temperature'], color='purple', label='Too Hot', s=50)
     plt.xlabel('Time')
     plt.ylabel('Temperature (°C)')
@@ -128,9 +128,8 @@ Data = pd.DataFrame({
     'Temperature' : temperature
     })
 Data['Health_status'] = Data.apply(lambda row: check_health(row['Soilmoisture'],row['Lightlevel'],row['Temperature']),axis = 1)
-print("Plotting now")
+
 plot_plant_data(Data)
-print('Done')
 
 
 
@@ -142,6 +141,5 @@ print(Data.iloc[10:15]) # midday peak
 print(Data.iloc[22:26]) # midnight low
 print(Data.iloc[70:75])
 print(Data.iloc[163:168]) # testing to see the last 5 data points
-
 
 
