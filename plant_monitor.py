@@ -130,12 +130,8 @@ Data = pd.DataFrame({
 Data['Health_status'] = Data.apply(lambda row: check_health(row['Soilmoisture'],row['Lightlevel'],row['Temperature']),axis = 1)
 
 plot_plant_data(Data)
-
-
-
-
-
-
+Data.to_csv('plant_data.csv',index = False)
+print('Data saved to CSV  file.')
 print(Data.head())
 print(Data.iloc[10:15]) # midday peak
 print(Data.iloc[22:26]) # midnight low
