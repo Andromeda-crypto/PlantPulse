@@ -130,8 +130,8 @@ Data = pd.DataFrame({
 Data['Health_status'] = Data.apply(lambda row: check_health(row['Soilmoisture'],row['Lightlevel'],row['Temperature']),axis = 1)
 
 plot_plant_data(Data)
-current_time = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M')  # e.g., 2025-03-10_15-45
-filename = f'plant_data_{current_time}.csv'  # e.g., plant_data_2025-03-10_15-45.csv
+current_time = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M')  
+filename = f'plant_data_{current_time}.csv'  
 Data.to_csv(filename, index=False)
 print(f"Data saved to {filename}")
 
