@@ -182,7 +182,7 @@ else:
 
 
 
-'''print(Data.head())
+print(Data.head())
 print(Data.iloc[10:15]) # midday peak
 print(Data.iloc[22:26]) # midnight low
 print(Data.iloc[70:75])
