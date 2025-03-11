@@ -54,20 +54,31 @@ def add_light_simulation():
     return light
 
 def add_temperature_simulation():
-    # similar logic to light using sin wave to simulate temperature
+    hours = 168
     temperature = []
-    for i in range(168):
-        base_value = 22 + 5 * math.sin(math.pi * i/12)
-        temperature_value = base_value + np.random.uniform(-1,1)
-        if temperature_value < 0:
-            temperature_value = 0
-        elif temperature_value > 40:
-            temperature_value = 40
-        
-        temperature.append(temperature_value)
+    heat_wave_start = random.randint(0,156) if random.random() < 0.075 else None
+    heat_wave_duration = random.randint(12,24) if heat_wave_start is not None else 0
+
+    cold_wave_start = random.randint(0,156) if random.random() < 0.05 else None
+    cold_wave_duration = random.randint(6,12) if cold_wave_start is not None else 0
+
+    for i in range(hours):
+        base_temp = 22 + 5 * np.sin(2 * np.pi * (i%24) / 24)
+        if heat_wave_start and heat_wave_start <= i < heat_wave_start + heat_wave_duration:
+            temp = random.uniform(29,32)
+        elif cold_wave_start and cold_wave_start <= i < cold_wave_start + cold_wave_duration:
+            temp = random.uniform(14,16)
+        else:
+            temp = base_temp
+        noise = random.randint(-2,2)
+        temp = max(10,min(35,temp + noise))
+        temperature.append(temp)
     return temperature
+
+
     
-# health check function
+    
+
 
 def check_health(moisture,light,temperature):
     # check for moisture first, if it is low no need to check for the rest
