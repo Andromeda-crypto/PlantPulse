@@ -182,7 +182,58 @@ else:
 
 
 
-print(Data.head())
+while True:
+    print('What do you want to do?')
+    print('1. Query Hour')
+    print('2. Zoom plot')
+    print('3. Exit')
+    choice = (input('Enter your choice : '))
+    if choice == '1':
+        hour = input('Enter the hour (0-167) : ')
+        try :
+            hour = int(hour)
+            if 0 <=  hour <= 167:
+                row = Data.iloc[hour]
+                print(f"hour {hour}")
+                print(f"Timestamp : {row['Timestamp']}")
+                print(f'SoilMoisture : {row['Soilmoisture']:.2f} %')
+                print(f"Lightlevel : {row['Lightlevel'] :.2f} lux ")
+                print(f"Temperature : {row["Temperature"] :.2f} °C ")
+                print(f"Health_status : {row['Health_status']}")
+            else:
+                print("Hour must be between 0 and 167!")
+        except ValueError:
+            print(' Please enter a valid number.')
+    elif choice == '2':
+        start = int(input("Enter start hour (0-167) : "))
+        end = int(input('Enter ending hours (0-167) : '))
+        try:
+            start,end = int(start), int(end)
+            if 0 <= start <= end <= 167:
+                subset = Data.iloc[start:end+1]
+                plot_plant_data(subset)
+                plt.show()
+            else:
+                print(' Start and end should be between 0 and 167 (start <= end) !')
+        except ValueError:
+            print('Please enter valid values for both start and end!')
+    elif choice == '3':
+        print('Exiting-see you next time!')
+        break
+
+    else:
+        print('Invalid choice\nPick between 1, 2 or 3 : ')
+
+
+
+
+    
+
+
+
+
+
+'''print(Data.head())
 print(Data.iloc[10:15]) # midday peak
 print(Data.iloc[22:26]) # midnight low
 print(Data.iloc[70:75])
