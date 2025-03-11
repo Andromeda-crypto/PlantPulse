@@ -36,25 +36,22 @@ def add_moisture_simulation():
         moisture.append(next_moisture)
 
     return moisture
-
-
-
-        
-
+       
 def add_light_simulation():
+    hours = 168
     light = []
-    for i in range(168):
-        base_value = 500 + 500 * math.sin(math.pi *i / 12)
-        light_value = base_value + np.random.uniform(-50,50)
-        if light_value < 0:
-            light_value = 0
-        elif light_value > 1000:
-            light_value = 1000
-        light.append(light_value)
-
+    cloudy_starts = [i for i in range(0,hours,24)if random.random() <0.10]
+    cloudy_durations = {start : random.randint(3,6) for start in cloudy_starts}
+    for i in range(1,hours):
+        base_light  = 500 + 500 * np.sin(2 * np.pi * (i%24) / 24 ) 
+        if any(start <= i <= start + cloudy_durations[start] for start in cloudy_starts):
+            light_level = min(base_light,random.uniform(300,500))
+        else:
+            light_level = base_light
+        noise = random.uniform(-200,200)
+        light_level = max(0,min(1000,light_level + noise))
+        light.append(light_level)
     return light
-
-
 
 def add_temperature_simulation():
     # similar logic to light using sin wave to simulate temperature
