@@ -8,7 +8,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from datetime import timedelta
 import math
-
+import random
 
 np.random.seed(42)
 
