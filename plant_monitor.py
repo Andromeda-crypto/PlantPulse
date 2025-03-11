@@ -18,19 +18,28 @@ time_points = [start_time + timedelta(hours=i) for i in range(168)]
 
 # Create soil moisture data
 def add_moisture_simulation():
+    hours = 168
     moisture = [50]  
-    for i in range(167):  
-        if (i + 1) % 72 == 0:  
-            moisture.append(70)
-        else:
-            last_value = moisture[-1]  
-            new_value = last_value - np.random.uniform(0.5, 2)
-            if new_value < 20:
-                new_value = 20
-            elif new_value > 80:
-                new_value = 80
-            moisture.append(new_value)
+    watered_hours = [0]
+    rain_hours = random.randint(20,148) if random.random() < 0.05 else None
+    for i in range(1,hours):  
+        drop = random.uniform(0.5,2.0)
+        next_moisture = moisture[-1] - drop
+
+        if i == rain_hours:
+            next_moisture += random.uniform(20,30)
+            if next_moisture > 100:
+                next_moisture = 100
+        if next_moisture <= 20:
+            next_moisture = 70
+            watered_hours.append(i)
+        moisture.append(next_moisture)
+
     return moisture
+
+
+
+        
 
 def add_light_simulation():
     light = []
