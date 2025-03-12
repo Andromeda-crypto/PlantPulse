@@ -205,24 +205,14 @@ while True:
         except ValueError:
             print(' Please enter a valid number.')
     elif choice == '2':
-        start = int(input("Enter start hour (0-167) : "))
-        end = int(input('Enter ending hours (0-167) : '))
-        try:
-            start,end = int(start), int(end)
-            if 0 <= start <= end <= 167:
-                subset = Data.iloc[start:end+1]
-                plot_plant_data(subset)
-                plt.show()
-            else:
-                print(' Start and end should be between 0 and 167 (start <= end) !')
-        except ValueError:
-            print('Please enter valid values for both start and end!')
+        print("Zoom plot not implemented yet-coming soon.")
     elif choice == '3':
         print('Exiting-see you next time!')
         break
 
     else:
         print('Invalid choice\nPick between 1, 2 or 3 : ')
+
 
 
 
