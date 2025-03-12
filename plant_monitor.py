@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 from datetime import timedelta
 import math
 import random
+import sys
+import os
 
 np.random.seed(42)
 
@@ -139,16 +141,12 @@ def plot_plant_data(data):
    
     
 # testing
+
+
 moisture_level = add_moisture_simulation()
 light = add_light_simulation()
 temperature = add_temperature_simulation()
-
-# Debug lengths
-print(f"Length of time_points: {len(time_points)}")
-print(f"Length of moisture_level: {len(moisture_level)}")
-print(f"Length of light: {len(light)}")
-print(f"Length of temperature: {len(temperature)}")
-
+os.environ['OS_ACTIVITY_MODE'] = 'disable'
 Data = pd.DataFrame({
     'Timestamp': time_points,
     'Soilmoisture': moisture_level,
@@ -159,8 +157,9 @@ Data['Health_status'] = Data.apply(
     lambda row: check_health(row['Soilmoisture'], row['Lightlevel'], row['Temperature']),
     axis=1
 )
-plt.ion()
+plt.ion()  # Non-blocking plot—assuming you added this
 plot_plant_data(Data)
+plt.show()  # Already non-blocking with ion()
 
 current_time = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M')
 filename = f'plant_data_{current_time}.csv'
@@ -182,39 +181,45 @@ else:
     print(f"Water in {hours_to_20_rounded} hours at {next_time_str}")
 
 
+with open(os.devnull, 'w') as devnull:
+    old_stderr = sys.stderr  
+    sys.stderr = devnull    
+    try:
+        while True:
+            print("\nWhat do you want to do?")
+            print("1: Query hour")
+            print("2: Zoom plot")
+            print("3: Exit")
+            choice = input("Enter choice (1-3): ")
 
-while True:
-    print('What do you want to do?')
-    print('1. Query Hour')
-    print('2. Zoom plot')
-    print('3. Exit')
-    choice = (input('Enter your choice : '))
-    if choice == '1':
-        hour = input('Enter the hour (0-167) : ')
-        try :
-            hour = int(hour)
-            if 0 <=  hour <= 167:
-                row = Data.iloc[hour]
-                print(f"hour {hour}")
-                print(f"Timestamp : {row['Timestamp']}")
-                print(f'SoilMoisture : {row['Soilmoisture']:.2f} %')
-                print(f"Lightlevel : {row['Lightlevel'] :.2f} lux ")
-                print(f"Temperature : {row["Temperature"] :.2f} °C ")
-                print(f"Health_status : {row['Health_status']}")
+            if choice == '1':
+                hour = input("Enter hour (0-167): ")
+                try:
+                    hour = int(hour)
+                    if 0 <= hour <= 167:
+                        row = Data.iloc[hour]
+                        print(f"\nHour {hour}:")
+                        print(f"Timestamp: {row['Timestamp']}")
+                        print(f"Soilmoisture: {row['Soilmoisture']:.2f}%")
+                        print(f"Lightlevel: {row['Lightlevel']:.2f} lux")
+                        print(f"Temperature: {row['Temperature']:.2f}°C")
+                        print(f"Health_status: {row['Health_status']}")
+                    else:
+                        print("Hour must be between 0 and 167!")
+                except ValueError:
+                    print("Please enter a valid number!")
+
+            elif choice == '2':
+                print("Zoom plot not implemented yet—coming soon!")
+
+            elif choice == '3':
+                print("Exiting—see you next time!")
+                break
+
             else:
-                print("Hour must be between 0 and 167!")
-        except ValueError:
-            print(' Please enter a valid number.')
-    elif choice == '2':
-        print("Zoom plot not implemented yet-coming soon.")
-    elif choice == '3':
-        print('Exiting-see you next time!')
-        break
-
-    else:
-        print('Invalid choice\nPick between 1, 2 or 3 : ')
-
-
+                print("Invalid choice—pick 1, 2, or 3!")
+    finally:
+        sys.stderr = old_stderr  # Restore stderr after loop
 
 
 
