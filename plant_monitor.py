@@ -159,7 +159,7 @@ Data['Health_status'] = Data.apply(
 )
 plt.ion()  # Non-blocking plot—assuming you added this
 plot_plant_data(Data)
-plt.show()  # Already non-blocking with ion()
+plt.show()  # Already non-blocking with ion() 
 
 current_time = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M')
 filename = f'plant_data_{current_time}.csv'
@@ -219,7 +219,8 @@ with open(os.devnull, 'w') as devnull:
             else:
                 print("Invalid choice—pick 1, 2, or 3!")
     finally:
-        sys.stderr = old_stderr  # Restore stderr after loop
+        sys.stderr = old_stderr 
+
 
 
 
