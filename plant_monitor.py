@@ -133,7 +133,7 @@ def plot_plant_data(data):
     plt.legend()
     plt.grid(True)
 
-    # Adjust layout and show
+    
     plt.tight_layout()
     plt.show()
    
@@ -159,6 +159,7 @@ Data['Health_status'] = Data.apply(
     lambda row: check_health(row['Soilmoisture'], row['Lightlevel'], row['Temperature']),
     axis=1
 )
+plt.ion()
 plot_plant_data(Data)
 
 current_time = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M')
