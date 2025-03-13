@@ -12,6 +12,7 @@ import random
 import sys
 import os
 
+os.environ['OS_ACTIVITY_MODE'] = 'disable'
 np.random.seed(42)
 
 
@@ -146,7 +147,7 @@ def plot_plant_data(data):
 moisture_level = add_moisture_simulation()
 light = add_light_simulation()
 temperature = add_temperature_simulation()
-os.environ['OS_ACTIVITY_MODE'] = 'disable'
+
 Data = pd.DataFrame({
     'Timestamp': time_points,
     'Soilmoisture': moisture_level,
