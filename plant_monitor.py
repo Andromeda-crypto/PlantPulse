@@ -162,8 +162,8 @@ plot_plant_data(Data)
 plt.show()  # Already non-blocking with ion() 
 
 current_time = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M')
-filename = f'csv runs plant_data_{current_time}.csv'
-Data.to_csv(f"csv runs{filename}", index=False)
+filename = f'plant_data_{current_time}.csv'
+Data.to_csv(f"csv runs/{filename}", index=False)
 print(f"Data saved to {filename}")
 
 last_moisture = Data['Soilmoisture'].iloc[-1]
