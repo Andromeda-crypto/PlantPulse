@@ -1,18 +1,21 @@
 # purpose of this file is to simulate and generate fake sensor which will create data
 # such as soil moisture, light, temperature) over 7 days with hourly readings (168 total points).
-
+import os
+os.environ['OS_ACTIVITY_MODE'] = 'disable'
 import datetime
 import time
 import numpy as np
 import pandas as pd
+import matplotlib
 import matplotlib.pyplot as plt
 from datetime import timedelta
 import math
 import random
 import sys
-import os
 
-os.environ['OS_ACTIVITY_MODE'] = 'disable'
+
+
+
 np.random.seed(42)
 
 
@@ -158,10 +161,7 @@ Data['Health_status'] = Data.apply(
     lambda row: check_health(row['Soilmoisture'], row['Lightlevel'], row['Temperature']),
     axis=1
 )
-plt.ion()  # Non-blocking plot—assuming you added this
-plot_plant_data(Data)
-plt.show()  # Already non-blocking with ion() 
-
+print(plt.get_backend()) 
 current_time = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M')
 filename = f'plant_data_{current_time}.csv'
 Data.to_csv(f"csv runs/{filename}", index=False)
@@ -181,6 +181,10 @@ else:
     next_time_str = next_time.strftime('%Y-%m-%d %H:%M')
     print(f"Water in {hours_to_20_rounded} hours at {next_time_str}")
 
+matplotlib.use('TkAgg')
+plt.ion()
+plot_plant_data(Data)
+plt.show()  # Already non-blocking with ion() 
 
 with open(os.devnull, 'w') as devnull:
     old_stderr = sys.stderr  
@@ -221,6 +225,7 @@ with open(os.devnull, 'w') as devnull:
                 print("Invalid choice—pick 1, 2, or 3!")
     finally:
         sys.stderr = old_stderr 
+        
 
 
 
