@@ -215,7 +215,18 @@ with open(os.devnull, 'w') as devnull:
                     print("Please enter a valid number!")
 
             elif choice == '2':
-                print("Zoom plot not implemented yet—coming soon!")
+                start_hour = int(input("Enter the start hour to start the zoom(0-167) : "))
+                end_hour = int(input("Enter the hour until which you wan to zoom into(0-167) : "))
+                if  not (0<= start_hour<=167) or not (0<=end_hour<=167) :
+                    print('Error\nPlease enter the hours within the specified range.')
+                if start_hour <= end_hour:
+                    print("Start hour cannot be less than end hour.\nTry again with the right inputs.")
+                    
+
+
+
+
+                
 
             elif choice == '3':
                 print("Exiting—see you next time!")
@@ -225,7 +236,7 @@ with open(os.devnull, 'w') as devnull:
                 print("Invalid choice—pick 1, 2, or 3!")
     finally:
         sys.stderr = old_stderr 
-        
+
 
 
 
