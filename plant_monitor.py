@@ -101,10 +101,10 @@ def check_health(moisture,light,temperature):
        return 'Too Hot Plant should be exposed to less heat'
     return 'Plant is healthy All Good!'
 
-def plot_plant_data(data):
+def plot_plant_data(Data):
     # plotting the data
 
-    plt.figure(figsize=(12, 10))
+    
 
     # Soilmoisture with Low moisture markers
     plt.subplot(3, 1, 1)
@@ -140,8 +140,8 @@ def plot_plant_data(data):
     plt.grid(True)
 
     
-    plt.tight_layout()
-    plt.show()
+    
+    
    
     
 # testing
@@ -215,18 +215,42 @@ with open(os.devnull, 'w') as devnull:
                     print("Please enter a valid number!")
 
             elif choice == '2':
+                
                 start_hour = int(input("Enter the start hour to start the zoom(0-167) : "))
-                end_hour = int(input("Enter the hour until which you wan to zoom into(0-167) : "))
+                end_hour = int(input("Enter the hour until which you want to zoom into(0-167) : "))
+                    
+                    
                 if  not (0<= start_hour<=167) or not (0<=end_hour<=167) :
                     print('Error\nPlease enter the hours within the specified range.')
-                if start_hour <= end_hour:
-                    print("Start hour cannot be less than end hour.\nTry again with the right inputs.")
-                    
+                    retry = input('Retry(yes/no? :').lower()
+                    if retry == 'yes':
+                        start_hour = int(input("Enter the start hour to start the zoom(0-167) : "))
+                        end_hour = int(input("Enter the hour until which you want to zoom into(0-167) : "))    
+                    elif start_hour  > end_hour:
+                        print("Error.\nStarting hour has to be before the ending hour! ")
+                        again = retry = input('Retry(yes/no? :').lower()
+                        if again == 'yes':
+                            start_hour = int(input("Enter the start hour to start the zoom(0-167) : "))
+                            end_hour = int(input("Enter the hour until which you want to zoom into(0-167) : ")) 
+                        else:
+                            print('Thnak you\nSee you next time.')
+                            break
+                    else:
+                        print('Thank you!\nSee you next time')
+                        break
+                
 
-
-
+                zoomed_data = Data.iloc[start_hour: end_hour +1]
+                print(zoomed_data.shape)
+                print(zoomed_data.head())
+                plt.figure(figsize=(12,10))
+                plt.ion()
+                plot_plant_data(zoomed_data)
+                plt.tight_layout()
+                plt.show()
 
                 
+
 
             elif choice == '3':
                 print("Exiting—see you next time!")
