@@ -1,14 +1,42 @@
 import pandas as pd
-import plotly
 import flask
 from flask import Flask, render_template, request
 import plotly.graph_objects as go
 from plotly._subplots import make_subplots
+import os
+from werkzeug.utils import secure_filename
+
+
+
+
+
 
 app = Flask(__name__)
+UPLOAD_FOLDER = 'uploads'
+ALLOWED_EXTENSIONS = {'png','jpg','jpeg'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 # load data
 
 Data = pd.read_csv('csv runs/plant_data_2025-03-10_10-47.csv')
+@app.route('/photo',methods=['GET','POST'])
+def photo():
+    if request.method == 'POST':
+        if 'photo' not in request.files:
+            return render_template('photo.html',message="No File Uploaded!")
+        file = request.files['photo']
+        if file.filename == "":
+            return render_template('photo.html',message="No File selected!")
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'],filename)
+            file.save(filepath)
+            return render_template('photo.html',message=f"Image Saved : {filename}")
+        return render_template('photo.html',message='Invalid file type! Use .jpg, .png or .jpeg')
+    return render_template('photo.html',message=None)
+
+
 @app.route('/')
 def home():
     return render_template('index.html')
@@ -75,6 +103,11 @@ def zoom():
 @app.route('/exit')
 def exit():
     return "Exiting–– See you next time! (close tab to stop.)"
+
+# debugging
+print(os.path.abspath('static/style.css'))
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)
