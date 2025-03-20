@@ -16,6 +16,7 @@ def allowed_file(filename):
 # Load data
 Data = pd.read_csv('csv runs/plant_data_2025-03-10_10-47.csv')
 
+
 @app.route('/')
 def home():
     print("Static path:", os.path.abspath('static/style.css'))  # Debug
