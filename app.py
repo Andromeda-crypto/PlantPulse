@@ -24,6 +24,10 @@ def home():
     print("Static path:", os.path.abspath('static/style.css'))  # Debug
     return render_template('index.html')
 
+print("Upload folder:", os.path.abspath(app.config['UPLOAD_FOLDER'])) # checking
+
+
+
 @app.route('/photo', methods=['GET', 'POST'])
 def photo():
     if request.method == 'POST':
@@ -41,10 +45,10 @@ def photo():
         return render_template('photo.html', message="Invalid file type! Use .jpg, .png, or .jpeg")
     return render_template('photo.html', message=None)
 
-@app.route('/uploads/<fileneame>')
+@app.route('/uploads/<filename>')
 def serve_upload(filename):
     return send_from_directory(
-        app.config['UPLOAD_FOLDER']
+        app.config['UPLOAD_FOLDER'],filename
     )
 
 
