@@ -52,6 +52,7 @@ def serve_upload(filename):
     )
 
 
+
 # Keep your query and zoom routes—unchanged
 @app.route('/query', methods=['GET', 'POST'])
 def query():
