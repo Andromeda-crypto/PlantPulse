@@ -1,9 +1,10 @@
 import os
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, send_from_directory
 import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from werkzeug.utils import secure_filename
+
 
 app = Flask(__name__)
 UPLOAD_FOLDER = 'uploads'
@@ -35,9 +36,17 @@ def photo():
             filename = secure_filename(file.filename)
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(filepath)
-            return render_template('photo.html', message=f"Image Saved: {filename}")
+            return render_template('photo.html', message=f"Image Saved: {filename}",filename=filename)
+        
         return render_template('photo.html', message="Invalid file type! Use .jpg, .png, or .jpeg")
     return render_template('photo.html', message=None)
+
+@app.route('/uploads/<fileneame>')
+def serve_upload(filename):
+    return send_from_directory(
+        app.config['UPLOAD_FOLDER']
+    )
+
 
 # Keep your query and zoom routes—unchanged
 @app.route('/query', methods=['GET', 'POST'])
