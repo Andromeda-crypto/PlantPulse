@@ -22,6 +22,11 @@
             <p class="result-box mx-auto mt-3 animate__animated animate__fadeInUp {% if 'Invalid' in message or 'No file' in message %} error {% endif %}">
                 {{ message }}
             </p>
+            {% if filename %}
+                <div class="mt-3">
+                    <img src="/uploads/{{ filename }}" alt="Uploaded Photo" class="img-fluid" style="max-width: 500px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);">
+                </div>
+            {% endif %}
         {% endif %}
         <a href="/" class="btn btn-outline-secondary btn-custom mt-3">Back</a>
     </div>
