@@ -67,6 +67,9 @@ def add_light_simulation():
 
 
 
+
+
+
 def add_temperature_simulation():
     hours = 168
     temperature = []
