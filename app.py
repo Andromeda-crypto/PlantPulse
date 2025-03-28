@@ -41,11 +41,18 @@ def photo():
             filename = secure_filename(file.filename)
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(filepath)
-            cv2.imread(filepath)
-            avg_color = cv2.imread(filepath).mean(axis=0).mean(axis=0)
+            img = cv2.imread(filepath)
+            avg_color = img.mean(axis=0).mean(axis=0)
+            # avg_color[0] is Blue
+            # avg_color[1] is Green 
+            # avg_color[2] is Red
             
-                
-            return render_template('photo.html', message=f"Image Saved: {filename}",filename=filename)
+            if avg_color[1] > 70:  # Example: checking if red value is greater than 100
+                result = "Soil : Wet"
+            else:
+                result = "Soil : Dry"
+            
+            return render_template('photo.html', message=f"Image Saved: {filename}", filename=filename,result = result)
         
         return render_template('photo.html', message="Invalid file type! Use .jpg, .png, or .jpeg")
     return render_template('photo.html', message=None)
