@@ -47,7 +47,7 @@ def photo():
             # avg_color[1] is Green 
             # avg_color[2] is Red
             
-            if avg_color[1] > 70:  # Example: checking if red value is greater than 100
+            if avg_color[2] > 70:  # Example: checking if red value is greater than 100
                 result = "Soil : Wet"
             else:
                 result = "Soil : Dry"
