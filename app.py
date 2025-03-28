@@ -1,3 +1,4 @@
+import cv2
 import os
 from flask import Flask, render_template, request, send_from_directory
 import pandas as pd
@@ -40,6 +41,10 @@ def photo():
             filename = secure_filename(file.filename)
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(filepath)
+            cv2.imread(filepath)
+            avg_color = cv2.imread(filepath).mean(axis=0).mean(axis=0)
+            
+                
             return render_template('photo.html', message=f"Image Saved: {filename}",filename=filename)
         
         return render_template('photo.html', message="Invalid file type! Use .jpg, .png, or .jpeg")

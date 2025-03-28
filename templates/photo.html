@@ -25,6 +25,9 @@
             {% if filename %}
                 <div class="mt-3">
                     <img src="/uploads/{{ filename }}" alt="Uploaded Photo" class="img-fluid" style="max-width: 500px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);">
+                    {% if result %}
+    <p class="result-box mt-3 animate__animated animate__fadeInUp">{{ result }}</p>
+{% endif %}
                 </div>
             {% endif %}
         {% endif %}
