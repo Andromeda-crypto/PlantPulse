@@ -44,10 +44,10 @@ def photo():
             img = cv2.imread(filepath)
             avg_color = img.mean(axis=0).mean(axis=0)
             # avg_color[0] is Blue
-            # avg_color[1] is Green 
-            # avg_color[2] is Red
+            # 2 is green
+            # 3 is red
             
-            if avg_color[2] > 70:  # Example: checking if red value is greater than 100
+            if avg_color[0] < 70:  # Example: checking if red value is greater than 100
                 result = "Soil : Wet"
             else:
                 result = "Soil : Dry"
