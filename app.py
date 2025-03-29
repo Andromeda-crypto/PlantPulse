@@ -44,11 +44,13 @@ def photo():
             file.save(filepath)
             img = cv2.imread(filepath)
             edges = cv2.Canny(img,100,200)
+            edge_density = np.sum(edges)/(img.shape[0]*img.shape[1])
             edge_count = np.sum(edges)/255
             hsv = cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
             brown_mask = cv2.inRange(hsv,(10,20,0),(40,100,255))
             brown_percent = np.sum(brown_mask)/(img.shape[0] * img.shape[1]) * 100
-            is_soil = edge_count>5000 and brown_percent > 30
+            color_var = np.std(img)
+            is_soil = edge_count>5000 and brown_percent > 30 and color_var > 50 and edge_density > 10
             
             if is_soil:
                 avg_color = img.mean(axis=0).mean(axis=0)
