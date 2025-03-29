@@ -58,10 +58,37 @@ def photo():
             elif brown_percent > 50 :
                 content = 'soil'
             elif green_percent > 30 and brown_percent>30:
-                content= "PLant and Soil"
+                content= "Plant and Soil"
             else:
                 content = 'unknown'
-            
+            result = ""
+            if content =="soil":
+                is_soil = edge_count > 5000 and brown_percent  > 30 and color_var > 50 and edge_density > 10
+                if is_soil:
+                    avg_color = img.mean(axis=0).mean(axis=0)
+                    result = "Soil : Wet" if avg_color[0] < 70 else "Soil : Dry"
+                else:
+                    result = "Not soil ––Upload a soil pic!"
+            elif content =="plant":
+                yellow_mask = cv2.inRange(hsv,(20,40,40) , (35,255,255))
+                yellow_percent = np.sum(yellow_mask)/(img.shape[0] * img.shape[1]) * 100
+                result = "Plant : Healthy" if yellow_percent<20 else "Plant : Stressed"
+            elif content =="Plant and Soil":
+                is_soil = edge_count > 5000 and brown_percent > 30 and color_var > 50 and edge_density>10
+                yellow_mask = cv2.inRange(hsv,(20,40,40),(35,255,255))
+                yellow_percent = np.sum(yellow_mask)/(img.shape[0]*img.shape[1]) * 100
+                if is_soil:
+                    avg_color = img.mean(axis=0).mean(axis=0)
+                    soil_status = "Soil : Wet" if avg_color[0] < 70 else "Soil : Dry"
+                    plant_status = "Plant : Healthy" if yellow_percent < 20 else "Plant : Stressed"
+                    result = f"Soil : {soil_status}, Plant : {plant_status}"
+                    if soil_status == "Wet" and plant_status =="Plant : Stressed":
+                        result += "-–Overwatered?"
+                    elif soil_status =="Dry" and plant_status == "Plant : Stressed":
+                        result += "––Underwatered?"
+                    else:
+                        result += "––Balanced!"
+
             
 
 
