@@ -48,15 +48,17 @@ def photo():
             hsv = cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
             brown_mask = cv2.inRange(hsv,(10,20,0),(40,100,255))
             brown_percent = np.sum(brown_mask)/(img.shape[0] * img.shape[1]) * 100
-
-            soil  = soil if edge_count > 5000 and brown_percent > 30 else print("Not a soil upload\nUpload a soil pic ! ")
-            if soil:
+            is_soil = edge_count>5000 and brown_percent > 30
+            
+            if is_soil:
                 avg_color = img.mean(axis=0).mean(axis=0)
-                if avg_color[0] < 70:  
+                if avg_color[0] < 70:
                     result = "Soil : Wet"
                 else:
                     result = "Soil : Dry"
-            
+            else:
+                result = "Not soil\nUpload soil pic!"
+
             
             return render_template('photo.html', message=f"Image Saved: {filename}", filename=filename,result = result)
         
