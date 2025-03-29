@@ -82,9 +82,9 @@ def photo():
                     soil_status = "Soil : Wet" if avg_color[0] < 70 else "Soil : Dry"
                     plant_status = "Plant : Healthy" if yellow_percent < 20 else "Plant : Stressed"
                     result = f"Soil : {soil_status}, Plant : {plant_status}"
-                    if soil_status == "Wet" and plant_status =="Plant : Stressed":
+                    if soil_status == "Soil : Wet" and plant_status =="Plant : Stressed":
                         result += "-–Overwatered?"
-                    elif soil_status =="Dry" and plant_status == "Plant : Stressed":
+                    elif soil_status =="Soil : Dry" and plant_status == "Plant : Stressed":
                         result += "––Underwatered?"
                     else:
                         result += "––Balanced!"
