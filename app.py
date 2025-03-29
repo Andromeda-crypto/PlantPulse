@@ -73,9 +73,6 @@ def serve_upload(filename):
 
 
 
-
-
-# Keep your query and zoom routes—unchanged
 @app.route('/query', methods=['GET', 'POST'])
 def query():
     if request.method == 'POST':
@@ -93,6 +90,7 @@ def query():
             result = "Error: Hour must be between 0 and 167!"
         return render_template('query.html', result=result)
     return render_template('query.html', result=None)
+
 
 @app.route('/zoom', methods=['GET', 'POST'])
 def zoom():
@@ -132,7 +130,7 @@ def zoom():
 
 @app.route('/exit')
 def exit():
-    return "Exiting—See you next time! (close tab to stop.)"
+    return "Exiting—See you next time! "
 
 if __name__ == '__main__':
     app.run(debug=True)
