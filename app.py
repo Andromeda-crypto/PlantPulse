@@ -5,6 +5,7 @@ import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from werkzeug.utils import secure_filename
+import numpy as np
 
 
 app = Flask(__name__)
@@ -42,15 +43,20 @@ def photo():
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(filepath)
             img = cv2.imread(filepath)
-            avg_color = img.mean(axis=0).mean(axis=0)
-            # avg_color[0] is Blue
-            # 2 is green
-            # 3 is red
+            edges = cv2.Canny(img,100,200)
+            edge_count = np.sum(edges)/255
+            hsv = cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
+            brown_mask = cv2.inRange(hsv,(10,20,0),(40,100,255))
+            brown_percent = np.sum(brown_mask)/(img.shape[0] * img.shape[1]) * 100
+
+            soil  = soil if edge_count > 5000 and brown_percent > 30 else print("Not a soil upload\nUpload a soil pic ! ")
+            if soil:
+                avg_color = img.mean(axis=0).mean(axis=0)
+                if avg_color[0] < 70:  
+                    result = "Soil : Wet"
+                else:
+                    result = "Soil : Dry"
             
-            if avg_color[0] < 70:  
-                result = "Soil : Wet"
-            else:
-                result = "Soil : Dry"
             
             return render_template('photo.html', message=f"Image Saved: {filename}", filename=filename,result = result)
         
