@@ -280,10 +280,5 @@ with open(os.devnull, 'w') as devnull:
 
 
 
-'''print(Data.head())
-print(Data.iloc[10:15]) # midday peak
-print(Data.iloc[22:26]) # midnight low
-print(Data.iloc[70:75])
-print(Data.iloc[163:168]) # testing to see the last 5 data points'''
 
 
