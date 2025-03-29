@@ -49,17 +49,21 @@ def photo():
             hsv = cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
             brown_mask = cv2.inRange(hsv,(10,20,0),(40,100,255))
             brown_percent = np.sum(brown_mask)/(img.shape[0] * img.shape[1]) * 100
+            green_mask = cv2.inRange(hsv,(35,40,40),(85,255,255))
+            green_percent = np.sum(green_mask)/(img.shape[0] * img.shape[1]) * 100
             color_var = np.std(img)
-            is_soil = edge_count>5000 and brown_percent > 30 and color_var > 50 and edge_density > 10
-            
-            if is_soil:
-                avg_color = img.mean(axis=0).mean(axis=0)
-                if avg_color[0] < 70:
-                    result = "Soil : Wet"
-                else:
-                    result = "Soil : Dry"
+
+            if green_percent > 50:
+                content= 'plant'
+            elif brown_percent > 50 :
+                content = 'soil'
+            elif green_percent > 30 and brown_percent>30:
+                content= "PLant and Soil"
             else:
-                result = "Not soil\nUpload soil pic!"
+                content = 'unknown'
+            
+            
+
 
             
             return render_template('photo.html', message=f"Image Saved: {filename}", filename=filename,result = result)
