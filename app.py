@@ -44,7 +44,7 @@ def photo():
             file.save(filepath)
             img = cv2.imread(filepath)
             blur = cv2.Laplacian(img,cv2.CV_64F).var()
-            brightness = img.mean
+            brightness = img.mean()
             if blur < 100:
                 result = "Image is blurry! Please upload a clearer image."
                 return render_template('photo.html', message=f"Image Saved : {filename}", filename=filename,result=result)
@@ -64,22 +64,24 @@ def photo():
             green_percent = np.sum(green_mask)/(img.shape[0] * img.shape[1]) * 100
             color_var = np.std(img)
 
-            if green_percent > 50:
-                content= 'plant'
-            elif brown_percent > 50 :
-                content = 'soil'
-            elif green_percent > 30 and brown_percent>30:
-                content= "Plant and Soil"
+            is_soil = edge_count > 5000 and brown_percent > 60 and color_var > 50 and edge_density > 10
+            is_plant = green_percent > 60 and edge_density > 5
+            if is_plant and not is_soil:
+                content = 'plant'
+            elif is_soil and not is_plant:
+                content = "soil"
+            elif is_soil and is_plant and green_percent > 40 and brown_percent > 40:
+                content = "Plant and soil"
             else:
-                content = 'unknown'
+                content = "unknown"
+            
+
             result = ""
-            if content =="soil":
-                is_soil = edge_count > 5000 and brown_percent  > 30 and color_var > 50 and edge_density > 10
-                if is_soil:
-                    avg_color = img.mean(axis=0).mean(axis=0)
-                    result = "Soil : Wet" if avg_color[0] < 70 else "Soil : Dry"
-                else:
-                    result = "Not soil ––Upload a soil pic!"
+            if content == "unknown":
+                result = "Not soil or plant–upload a soil or plant pic!"
+            elif content =="soil":
+                avg_color = img.mean(axis=0).mean(axis=0)
+                result = "Soil : Wet" if avg_color[0] < 70 else "Soil : Dry"
             elif content =="plant":
                 yellow_mask = cv2.inRange(hsv,(20,40,40) , (35,255,255))
                 yellow_percent = np.sum(yellow_mask)/(img.shape[0] * img.shape[1]) * 100
@@ -88,22 +90,17 @@ def photo():
                 is_soil = edge_count > 5000 and brown_percent > 30 and color_var > 50 and edge_density>10
                 yellow_mask = cv2.inRange(hsv,(20,40,40),(35,255,255))
                 yellow_percent = np.sum(yellow_mask)/(img.shape[0]*img.shape[1]) * 100
-                if is_soil:
-                    avg_color = img.mean(axis=0).mean(axis=0)
-                    soil_status = "Soil : Wet" if avg_color[0] < 70 else "Soil : Dry"
-                    plant_status = "Plant : Healthy" if yellow_percent < 20 else "Plant : Stressed"
-                    result = f"Soil : {soil_status}, Plant : {plant_status}"
-                    if soil_status == "Soil : Wet" and plant_status =="Plant : Stressed":
-                        result += "-–Overwatered?"
-                    elif soil_status =="Soil : Dry" and plant_status == "Plant : Stressed":
-                        result += "––Underwatered?"
-                    else:
-                        result += "––Balanced!"
-
-            
-
-
-            
+                soil_status = "Wet" if avg_color[0] < 70 else  "Dry"
+                plant_status = "Healthy" if yellow_percent < 20 else  "tressed"
+                result = f"{soil_status} , {plant_status}"
+                if soil_status == "Wet" and plant_status == "Stressed":
+                    result += "–Overwatered ?"
+                elif soil_status == "Dry" and plant_status == "Stressed":
+                    result += "–Underwatered ?"
+                else:
+                    result =+ "Balanced"
+            print("Image content:", content)
+            print("Image result:", result)            
             return render_template('photo.html', message=f"Image Saved: {filename}", filename=filename,result = result)
         
         return render_template('photo.html', message="Invalid file type! Use .jpg, .png, or .jpeg")
