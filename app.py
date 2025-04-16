@@ -43,6 +43,17 @@ def photo():
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(filepath)
             img = cv2.imread(filepath)
+            blur = cv2.Laplacian(img,cv2.CV_64F).var()
+            brightness = img.mean
+            if blur < 100:
+                result = "Image is blurry! Please upload a clearer image."
+                return render_template('photo.html', message=f"Image Saved : {filename}", filename=filename,result=result)
+            if brightness < 50:
+                result = "Image is too dark! Please upload a brighter image for better analysis."
+                return render_template('photo.html', message=f"IMage Saved : {filename}", filename=filename,result=result)
+            if brightness > 200:
+                result = "Too bright–reduce brightness for better analysis."
+                return render_template('photo.html', message=f"Image Saved : {filename}", filename=filename,result=result)
             edges = cv2.Canny(img,100,200)
             edge_density = np.sum(edges)/(img.shape[0]*img.shape[1])
             edge_count = np.sum(edges)/255
