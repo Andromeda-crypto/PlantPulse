@@ -60,13 +60,7 @@ def photo():
 
             is_soil = edge_count > 5000 and brown_percent > 60 and color_var > 50 and edge_density > 10
             is_plant = green_percent > 60 and edge_density > 5 and color_var < 50
-            brightness = img.mean(axis=0).mean(axis=0)
-            if brightness < 50:
-                result = "Image is too dark! Please upload a brighter image for better analysis."
-                return render_template('photo.html', message=f"IMage Saved : {filename}", filename=filename,result=result)
-            if brightness > 200:
-                result = "Too bright–reduce brightness for better analysis."
-                return render_template('photo.html', message=f"Image Saved : {filename}", filename=filename,result=result)
+            brightness = img.mean()
             if is_plant and not is_soil:
                 content = 'plant'
             elif is_soil and not is_plant:
@@ -98,7 +92,15 @@ def photo():
                     result += "–Overwatered ?"
                 elif soil_status == "Dry" and plant_status == "Stressed":
                     result += "–Underwatered ?"
-                else:
+                
+        
+            elif brightness < 50:
+                result = "Image is too dark! Please upload a brighter image for better analysis."
+                return render_template('photo.html', message=f"IMage Saved : {filename}", filename=filename,result=result)
+            elif brightness > 200:
+                result = "Too bright–reduce brightness for better analysis."
+                return render_template('photo.html', message=f"Image Saved : {filename}", filename=filename,result=result)
+            else:
                     result =+ "Balanced"
             print("Image content:", content)
             print("Image result:", result)            
