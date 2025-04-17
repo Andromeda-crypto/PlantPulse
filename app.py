@@ -44,16 +44,10 @@ def photo():
             file.save(filepath)
             img = cv2.imread(filepath)
             blur = cv2.Laplacian(img,cv2.CV_64F).var()
-            brightness = img.mean()
             if blur < 100:
                 result = "Image is blurry! Please upload a clearer image."
                 return render_template('photo.html', message=f"Image Saved : {filename}", filename=filename,result=result)
-            if brightness < 50:
-                result = "Image is too dark! Please upload a brighter image for better analysis."
-                return render_template('photo.html', message=f"IMage Saved : {filename}", filename=filename,result=result)
-            if brightness > 200:
-                result = "Too bright–reduce brightness for better analysis."
-                return render_template('photo.html', message=f"Image Saved : {filename}", filename=filename,result=result)
+            
             edges = cv2.Canny(img,100,200)
             edge_density = np.sum(edges)/(img.shape[0]*img.shape[1])
             edge_count = np.sum(edges)/255
@@ -65,7 +59,14 @@ def photo():
             color_var = np.std(img)
 
             is_soil = edge_count > 5000 and brown_percent > 60 and color_var > 50 and edge_density > 10
-            is_plant = green_percent > 60 and edge_density > 5
+            is_plant = green_percent > 60 and edge_density > 5 and color_var < 50
+            brightness = img.mean(axis=0).mean(axis=0)
+            if brightness < 50:
+                result = "Image is too dark! Please upload a brighter image for better analysis."
+                return render_template('photo.html', message=f"IMage Saved : {filename}", filename=filename,result=result)
+            if brightness > 200:
+                result = "Too bright–reduce brightness for better analysis."
+                return render_template('photo.html', message=f"Image Saved : {filename}", filename=filename,result=result)
             if is_plant and not is_soil:
                 content = 'plant'
             elif is_soil and not is_plant:
