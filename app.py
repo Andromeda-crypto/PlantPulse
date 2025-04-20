@@ -13,9 +13,9 @@ UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# Get the directory containing app.py
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-# Construct the path to the CSV file
+
 CSV_PATH = os.path.join(os.path.dirname(BASE_DIR), 'csv runs', 'plant_data_2025-04-17_00-38.csv')
 
 def allowed_file(filename):
