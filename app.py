@@ -12,17 +12,9 @@ app = Flask(__name__)
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-CSV_PATH = os.path.join(os.path.dirname(BASE_DIR), 'csv runs', 'plant_data_2025-04-17_00-38.csv')
-
+Data = pd.read_csv('plant_data.csv')
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-Data = pd.read_csv(CSV_PATH)
-
 
 
 @app.route('/')
