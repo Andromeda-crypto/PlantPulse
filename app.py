@@ -225,6 +225,125 @@ def zoom():
 def exit():
     return "Exiting—See you next time! "
 
+@app.route('/dashboard')
+def dashboard():
+    try:
+        # Calculate statistics
+        stats = {
+            'avg_moisture': round(Data['Soilmoisture'].mean(), 2),
+            'avg_light': round(Data['Lightlevel'].mean(), 2),
+            'avg_temp': round(Data['Temperature'].mean(), 2),
+            'health_score': calculate_health_score(Data)
+        }
+
+        # Create charts
+        moisture_chart = create_moisture_chart(Data)
+        light_chart = create_light_chart(Data)
+        temp_chart = create_temperature_chart(Data)
+        health_chart = create_health_chart(Data)
+
+        # Generate alerts
+        alerts = generate_alerts(Data)
+
+        return render_template('dashboard.html',
+                           stats=stats,
+                           moisture_chart=moisture_chart,
+                           light_chart=light_chart,
+                           temp_chart=temp_chart,
+                           health_chart=health_chart,
+                           alerts=alerts)
+    except Exception as e:
+        return render_template('dashboard.html', error=str(e))
+
+def calculate_health_score(data):
+    # Calculate health score based on various factors
+    moisture_score = min(100, max(0, (data['Soilmoisture'].mean() / 100) * 100))
+    light_score = min(100, max(0, (data['Lightlevel'].mean() / 1000) * 100))
+    temp_score = min(100, max(0, (1 - abs(data['Temperature'].mean() - 25) / 25) * 100))
+    
+    return round((moisture_score + light_score + temp_score) / 3, 1)
+
+def create_moisture_chart(data):
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=data['Timestamp'], y=data['Soilmoisture'],
+                            mode='lines', name='Soil Moisture',
+                            line=dict(color='blue')))
+    fig.update_layout(title='Soil Moisture Over Time',
+                     xaxis_title='Time',
+                     yaxis_title='Moisture (%)',
+                     height=300)
+    return fig.to_html(full_html=False)
+
+def create_light_chart(data):
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=data['Timestamp'], y=data['Lightlevel'],
+                            mode='lines', name='Light Level',
+                            line=dict(color='orange')))
+    fig.update_layout(title='Light Level Over Time',
+                     xaxis_title='Time',
+                     yaxis_title='Light (lux)',
+                     height=300)
+    return fig.to_html(full_html=False)
+
+def create_temperature_chart(data):
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=data['Timestamp'], y=data['Temperature'],
+                            mode='lines', name='Temperature',
+                            line=dict(color='red')))
+    fig.update_layout(title='Temperature Over Time',
+                     xaxis_title='Time',
+                     yaxis_title='Temperature (°C)',
+                     height=300)
+    return fig.to_html(full_html=False)
+
+def create_health_chart(data):
+    health_scores = []
+    for i in range(len(data)):
+        subset = data.iloc[max(0, i-5):i+1]
+        health_scores.append(calculate_health_score(subset))
+    
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=data['Timestamp'], y=health_scores,
+                            mode='lines', name='Health Score',
+                            line=dict(color='green')))
+    fig.update_layout(title='Plant Health Score Over Time',
+                     xaxis_title='Time',
+                     yaxis_title='Health Score',
+                     height=300)
+    return fig.to_html(full_html=False)
+
+def generate_alerts(data):
+    alerts = []
+    
+    # Check moisture
+    if data['Soilmoisture'].iloc[-1] < 30:
+        alerts.append({
+            'title': 'Low Soil Moisture',
+            'message': 'Plant needs watering',
+            'severity': 'warning',
+            'time': data['Timestamp'].iloc[-1]
+        })
+    
+    # Check light
+    if data['Lightlevel'].iloc[-1] < 500:
+        alerts.append({
+            'title': 'Low Light Level',
+            'message': 'Plant needs more light',
+            'severity': 'warning',
+            'time': data['Timestamp'].iloc[-1]
+        })
+    
+    # Check temperature
+    if data['Temperature'].iloc[-1] > 30:
+        alerts.append({
+            'title': 'High Temperature',
+            'message': 'Plant is too hot',
+            'severity': 'danger',
+            'time': data['Timestamp'].iloc[-1]
+        })
+    
+    return alerts
+
 if __name__ == '__main__':
     app.run(debug=True)
 
