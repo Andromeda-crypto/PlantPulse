@@ -17,7 +17,7 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-Data = pd.read_csv('csv runs/plant_data_2025-03-10_10-47.csv')
+Data = pd.read_csv('csv runs/plant_data_2025-04-17_00-38.csv')
 
 
 
