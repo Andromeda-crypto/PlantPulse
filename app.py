@@ -27,10 +27,10 @@ Data = pd.read_csv(CSV_PATH)
 
 @app.route('/')
 def home():
-    print("Static path:", os.path.abspath('static/style.css'))  # Debug
+    print("Static path:", os.path.abspath('static/style.css'))  
     return render_template('index.html')
 
-print("Upload folder:", os.path.abspath(app.config['UPLOAD_FOLDER'])) # checking
+print("Upload folder:", os.path.abspath(app.config['UPLOAD_FOLDER'])) 
 
 
 
