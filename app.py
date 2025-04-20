@@ -33,80 +33,129 @@ print("Upload folder:", os.path.abspath(app.config['UPLOAD_FOLDER'])) # checking
 @app.route('/photo', methods=['GET', 'POST'])
 def photo():
     if request.method == 'POST':
+        # Check if upload directory exists, if not create it
+        if not os.path.exists(app.config['UPLOAD_FOLDER']):
+            try:
+                os.makedirs(app.config['UPLOAD_FOLDER'])
+            except OSError as e:
+                return render_template('photo.html', message=f"Error creating upload directory: {str(e)}")
+
+        # Check if file was uploaded
         if 'photo' not in request.files:
-            return render_template('photo.html', message="No File Uploaded!")
+            return render_template('photo.html', message="No file part in request")
+
         file = request.files['photo']
-        if file.filename == "":
-            return render_template('photo.html', message="No File Selected!")
-        if file and allowed_file(file.filename):
+
+        # Check if file has a name
+        if file.filename == '':
+            return render_template('photo.html', message="No file selected")
+
+        # Check if file extension is allowed
+        if not allowed_file(file.filename):
+            return render_template('photo.html', message="File type not allowed. Please upload .jpg, .png, or .jpeg")
+
+        # Check file size (limit to 5MB)
+        file.seek(0, os.SEEK_END)
+        file_length = file.tell()
+        file.seek(0)
+        if file_length > 5 * 1024 * 1024:  # 5MB limit
+            return render_template('photo.html', message="File too large. Maximum size is 5MB")
+
+        # If all checks pass, proceed with file processing
+        try:
             filename = secure_filename(file.filename)
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(filepath)
-            img = cv2.imread(filepath)
-            blur = cv2.Laplacian(img,cv2.CV_64F).var()
-            if blur < 100:
-                result = "Image is blurry! Please upload a clearer image."
-                return render_template('photo.html', message=f"Image Saved : {filename}", filename=filename,result=result)
             
-            edges = cv2.Canny(img,100,200)
-            edge_density = np.sum(edges)/(img.shape[0]*img.shape[1])
-            edge_count = np.sum(edges)/255
-            hsv = cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
-            brown_mask = cv2.inRange(hsv,(10,20,0),(40,100,255))
-            brown_percent = np.sum(brown_mask)/(img.shape[0] * img.shape[1]) * 100
-            green_mask = cv2.inRange(hsv,(35,40,40),(85,255,255))
-            green_percent = np.sum(green_mask)/(img.shape[0] * img.shape[1]) * 100
-            color_var = np.std(img)
-
-            is_soil = edge_count > 5000 and brown_percent > 60 and color_var > 50 and edge_density > 10
-            is_plant = green_percent > 60 and edge_density > 5 and color_var < 50
-            brightness = img.mean()
-            if is_plant and not is_soil:
-                content = 'plant'
-            elif is_soil and not is_plant:
-                content = "soil"
-            elif is_soil and is_plant and green_percent > 40 and brown_percent > 40:
-                content = "Plant and soil"
-            else:
-                content = "unknown"
-            
-
-            result = ""
-            if content == "unknown":
-                result = "Not soil or plant–upload a soil or plant pic!"
-            elif content =="soil":
-                avg_color = img.mean(axis=0).mean(axis=0)
-                result = "Soil : Wet" if avg_color[0] < 70 else "Soil : Dry"
-            elif content =="plant":
-                yellow_mask = cv2.inRange(hsv,(20,40,40) , (35,255,255))
-                yellow_percent = np.sum(yellow_mask)/(img.shape[0] * img.shape[1]) * 100
-                result = "Plant : Healthy" if yellow_percent<20 else "Plant : Stressed"
-            elif content =="Plant and Soil":
-                is_soil = edge_count > 5000 and brown_percent > 30 and color_var > 50 and edge_density>10
-                yellow_mask = cv2.inRange(hsv,(20,40,40),(35,255,255))
-                yellow_percent = np.sum(yellow_mask)/(img.shape[0]*img.shape[1]) * 100
-                soil_status = "Wet" if avg_color[0] < 70 else  "Dry"
-                plant_status = "Healthy" if yellow_percent < 20 else  "tressed"
-                result = f"{soil_status} , {plant_status}"
-                if soil_status == "Wet" and plant_status == "Stressed":
-                    result += "–Overwatered ?"
-                elif soil_status == "Dry" and plant_status == "Stressed":
-                    result += "–Underwatered ?"
+            # Image reading and validation
+            try:
+                img = cv2.imread(filepath)
+                if img is None:
+                    return render_template('photo.html', message="Error: Could not read image file. Please try another image.")
                 
-        
-            elif brightness < 50:
-                result = "Image is too dark! Please upload a brighter image for better analysis."
-                return render_template('photo.html', message=f"IMage Saved : {filename}", filename=filename,result=result)
-            elif brightness > 200:
-                result = "Too bright–reduce brightness for better analysis."
-                return render_template('photo.html', message=f"Image Saved : {filename}", filename=filename,result=result)
-            else:
-                    result =+ "Balanced"
-            print("Image content:", content)
-            print("Image result:", result)            
-            return render_template('photo.html', message=f"Image Saved: {filename}", filename=filename,result = result)
-        
-        return render_template('photo.html', message="Invalid file type! Use .jpg, .png, or .jpeg")
+                # Check image dimensions
+                height, width = img.shape[:2]
+                if height < 100 or width < 100:
+                    return render_template('photo.html', message="Error: Image is too small. Please upload a larger image.")
+                
+                # Image processing with error handling
+                try:
+                    # Blur detection
+                    blur = cv2.Laplacian(img, cv2.CV_64F).var()
+                    if blur < 100:
+                        result = "Image is blurry! Please upload a clearer image."
+                        return render_template('photo.html', message=f"Image Saved: {filename}", filename=filename, result=result)
+                    
+                    # Edge detection
+                    edges = cv2.Canny(img, 100, 200)
+                    edge_density = np.sum(edges)/(img.shape[0]*img.shape[1])
+                    edge_count = np.sum(edges)/255
+                    
+                    # Color analysis
+                    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+                    brown_mask = cv2.inRange(hsv, (10,20,0), (40,100,255))
+                    brown_percent = np.sum(brown_mask)/(img.shape[0] * img.shape[1]) * 100
+                    green_mask = cv2.inRange(hsv, (35,40,40), (85,255,255))
+                    green_percent = np.sum(green_mask)/(img.shape[0] * img.shape[1]) * 100
+                    color_var = np.std(img)
+                    
+                    # Content analysis
+                    is_soil = edge_count > 5000 and brown_percent > 60 and color_var > 50 and edge_density > 10
+                    is_plant = green_percent > 60 and edge_density > 5 and color_var < 50
+                    brightness = img.mean()
+                    
+                    if is_plant and not is_soil:
+                        content = 'plant'
+                    elif is_soil and not is_plant:
+                        content = "soil"
+                    elif is_soil and is_plant and green_percent > 40 and brown_percent > 40:
+                        content = "Plant and soil"
+                    else:
+                        content = "unknown"
+                    
+                    # Result determination
+                    result = ""
+                    if content == "unknown":
+                        result = "Not soil or plant–upload a soil or plant pic!"
+                    elif content == "soil":
+                        avg_color = img.mean(axis=0).mean(axis=0)
+                        result = "Soil : Wet" if avg_color[0] < 70 else "Soil : Dry"
+                    elif content == "plant":
+                        yellow_mask = cv2.inRange(hsv, (20,40,40), (35,255,255))
+                        yellow_percent = np.sum(yellow_mask)/(img.shape[0] * img.shape[1]) * 100
+                        result = "Plant : Healthy" if yellow_percent<20 else "Plant : Stressed"
+                    elif content == "Plant and Soil":
+                        is_soil = edge_count > 5000 and brown_percent > 30 and color_var > 50 and edge_density>10
+                        yellow_mask = cv2.inRange(hsv, (20,40,40), (35,255,255))
+                        yellow_percent = np.sum(yellow_mask)/(img.shape[0]*img.shape[1]) * 100
+                        soil_status = "Wet" if avg_color[0] < 70 else "Dry"
+                        plant_status = "Healthy" if yellow_percent < 20 else "Stressed"
+                        result = f"{soil_status} , {plant_status}"
+                        if soil_status == "Wet" and plant_status == "Stressed":
+                            result += "–Overwatered ?"
+                        elif soil_status == "Dry" and plant_status == "Stressed":
+                            result += "–Underwatered ?"
+                    
+                    elif brightness < 50:
+                        result = "Image is too dark! Please upload a brighter image for better analysis."
+                    elif brightness > 200:
+                        result = "Too bright–reduce brightness for better analysis."
+                    else:
+                        result = "Balanced"
+                        
+                    return render_template('photo.html', message=f"Image Saved: {filename}", filename=filename, result=result)
+                    
+                except cv2.error as e:
+                    return render_template('photo.html', message=f"Error during image processing: {str(e)}")
+                except Exception as e:
+                    return render_template('photo.html', message=f"Unexpected error during image processing: {str(e)}")
+                    
+            except Exception as e:
+                return render_template('photo.html', message=f"Error reading image: {str(e)}")
+            
+        except Exception as e:
+            return render_template('photo.html', message=f"Error saving file: {str(e)}")
+
     return render_template('photo.html', message=None)
 
 @app.route('/uploads/<filename>')
