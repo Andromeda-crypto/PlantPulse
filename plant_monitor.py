@@ -1,16 +1,21 @@
 # purpose of this file is to simulate and generate fake sensor which will create data
 # such as soil moisture, light, temperature) over 7 days with hourly readings (168 total points).
-
+import os
+os.environ['OS_ACTIVITY_MODE'] = 'disable'
 import datetime
 import time
 import numpy as np
 import pandas as pd
+import matplotlib
 import matplotlib.pyplot as plt
 from datetime import timedelta
 import math
 import random
 import sys
-import os
+
+
+
+
 
 np.random.seed(42)
 
@@ -61,6 +66,11 @@ def add_light_simulation():
     return light
 
 
+
+
+
+
+
 def add_temperature_simulation():
     hours = 168
     temperature = []
@@ -97,10 +107,10 @@ def check_health(moisture,light,temperature):
        return 'Too Hot Plant should be exposed to less heat'
     return 'Plant is healthy All Good!'
 
-def plot_plant_data(data):
+def plot_plant_data(Data):
     # plotting the data
 
-    plt.figure(figsize=(12, 10))
+    
 
     # Soilmoisture with Low moisture markers
     plt.subplot(3, 1, 1)
@@ -136,8 +146,8 @@ def plot_plant_data(data):
     plt.grid(True)
 
     
-    plt.tight_layout()
-    plt.show()
+    
+    
    
     
 # testing
@@ -146,7 +156,7 @@ def plot_plant_data(data):
 moisture_level = add_moisture_simulation()
 light = add_light_simulation()
 temperature = add_temperature_simulation()
-os.environ['OS_ACTIVITY_MODE'] = 'disable'
+
 Data = pd.DataFrame({
     'Timestamp': time_points,
     'Soilmoisture': moisture_level,
@@ -157,13 +167,10 @@ Data['Health_status'] = Data.apply(
     lambda row: check_health(row['Soilmoisture'], row['Lightlevel'], row['Temperature']),
     axis=1
 )
-plt.ion()  # Non-blocking plot—assuming you added this
-plot_plant_data(Data)
-plt.show()  # Already non-blocking with ion() 
-
+print(plt.get_backend()) 
 current_time = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M')
 filename = f'plant_data_{current_time}.csv'
-Data.to_csv(filename, index=False)
+Data.to_csv(f"csv runs/{filename}", index=False)
 print(f"Data saved to {filename}")
 
 last_moisture = Data['Soilmoisture'].iloc[-1]
@@ -180,6 +187,10 @@ else:
     next_time_str = next_time.strftime('%Y-%m-%d %H:%M')
     print(f"Water in {hours_to_20_rounded} hours at {next_time_str}")
 
+matplotlib.use('TkAgg')
+plt.ion()
+plot_plant_data(Data)
+plt.show()  # Already non-blocking with ion() 
 
 with open(os.devnull, 'w') as devnull:
     old_stderr = sys.stderr  
@@ -210,7 +221,44 @@ with open(os.devnull, 'w') as devnull:
                     print("Please enter a valid number!")
 
             elif choice == '2':
-                print("Zoom plot not implemented yet—coming soon!")
+                
+                start_hour = int(input("Enter the start hour to start the zoom(0-167) : "))
+                end_hour = int(input("Enter the hour until which you want to zoom into(0-167) : "))
+                    
+                    
+                if  not (0<= start_hour<=167) or not (0<=end_hour<=167) :
+                    print('Error\nPlease enter the hours within the specified range.')
+                    retry = input('Retry(yes/no? :').lower()
+                    if retry == 'yes':
+                        start_hour = int(input("Enter the start hour to start the zoom(0-167) : "))
+                        end_hour = int(input("Enter the hour until which you want to zoom into(0-167) : "))    
+                    elif start_hour  > end_hour:
+                        print("Error.\nStarting hour has to be before the ending hour! ")
+                        again = retry = input('Retry(yes/no? :').lower()
+                        if again == 'yes':
+                            start_hour = int(input("Enter the start hour to start the zoom(0-167) : "))
+                            end_hour = int(input("Enter the hour until which you want to zoom into(0-167) : ")) 
+                        else:
+                            print('Thnak you\nSee you next time.')
+                            break
+                    else:
+                        print('Thank you!\nSee you next time')
+                        break
+                
+
+                zoomed_data = Data.iloc[start_hour: end_hour +1]
+                print(zoomed_data.shape)
+                print(zoomed_data.head())
+                plt.figure(figsize=(12,10))
+                plt.ion()
+                plot_plant_data(zoomed_data)
+                plt.tight_layout()
+                plt.show()
+
+
+
+                
+
 
             elif choice == '3':
                 print("Exiting—see you next time!")
@@ -224,16 +272,14 @@ with open(os.devnull, 'w') as devnull:
 
 
 
+
+
+
     
 
 
 
 
 
-'''print(Data.head())
-print(Data.iloc[10:15]) # midday peak
-print(Data.iloc[22:26]) # midnight low
-print(Data.iloc[70:75])
-print(Data.iloc[163:168]) # testing to see the last 5 data points'''
 
 
