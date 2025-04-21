@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'Uploads')
-CSV_DIR = os.path.join(BASE_DIR, 'csv runs')  # Updated to match your directory
+CSV_DIR = os.path.join(BASE_DIR, 'csv runs')  # Matches your directory
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
@@ -31,7 +31,7 @@ def load_latest_csv():
     try:
         logger.info(f"Searching for CSV files in {CSV_DIR}")
         csv_files = glob.glob(os.path.join(CSV_DIR, 'plant_data_*.csv'))
-        logger.info(f"Found CSV files: {csv_files}")
+        logger.info(f"Found {len(csv_files)} CSV files")
         if not csv_files:
             raise FileNotFoundError(f"No CSV files found in {CSV_DIR}")
         latest_csv = max(csv_files, key=os.path.getctime)
@@ -167,7 +167,7 @@ def photo():
         logger.error("Photo template not found")
         return "Error: Photo template not found.", 500
 
-@app.route('/uploads/<filename>')
+@app.route('/Uploads/<filename>')
 def serve_upload(filename):
     filename = secure_filename(filename)
     if not os.path.exists(os.path.join(app.config['UPLOAD_FOLDER'], filename)):
@@ -209,9 +209,15 @@ def zoom():
         logger.warning("Zoom route: No data available")
         return render_template('zoom.html', error=f"Error: No data available - {load_error}")
     if request.method == 'POST':
+        logger.info(f"Received form data: {request.form}")
         try:
-            start_hour = int(request.form['start_hour'])
-            end_hour = int(request.form['end_hour'])
+            start_hour_str = request.form.get('start_hour', '').strip()
+            end_hour_str = request.form.get('end_hour', '').strip()
+            if not start_hour_str or not end_hour_str:
+                raise ValueError("Start hour or end hour is missing or empty")
+            start_hour = int(start_hour_str)
+            end_hour = int(end_hour_str)
+            logger.info(f"Parsed start_hour: {start_hour}, end_hour: {end_hour}")
             if not (0 <= start_hour < len(Data) and 0 <= end_hour < len(Data)):
                 return render_template('zoom.html', error=f"Hours must be between 0 and {len(Data)-1}!")
             if start_hour > end_hour:
@@ -241,9 +247,13 @@ def zoom():
             fig.update_yaxes(title_text="Light (lux)", row=2, col=1)
             fig.update_yaxes(title_text="Temperature (°C)", row=3, col=1)
             plot_html = fig.to_html(full_html=False)
-            return render_template('zoom.html', plot_html=plot_html)
-        except ValueError:
-            return render_template('zoom.html', error="Invalid input—hours must be numbers!")
+            return render_template('zoom.html', plot_html=plot_html, error=None)
+        except ValueError as e:
+            logger.error(f"ValueError in zoom route: {str(e)}, Form data: {request.form}")
+            return render_template('zoom.html', error=f"Invalid input: {str(e)}")
+        except KeyError as e:
+            logger.error(f"KeyError in zoom route: {str(e)}, Form data: {request.form}")
+            return render_template('zoom.html', error=f"Form error: Missing field {str(e)}")
     try:
         return render_template('zoom.html', plot_html=None, error=None)
     except TemplateNotFound:
@@ -341,12 +351,12 @@ def generate_alerts(data):
             'title': 'High Temperature',
             'message': 'Plant is too hot',
             'severity': 'danger',
-            'time': data['Timestamp'].iloc[-1]
+            'time': data['Timestamp'].ilic[-1]
         })
     return alerts
 
 if __name__ == '__main__':
-    app.run(debug=True)  # Changed to debug=True for better error reporting
+    app.run(debug=True)
 
 
 

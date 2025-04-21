@@ -123,40 +123,34 @@
             const spinner = submitBtn.querySelector('.loading-spinner');
 
             function validateInputs() {
-                const start = parseInt(startHour.value) || -1;
-                const end = parseInt(endHour.value) || -1;
-                
-                // Clear previous validation messages
+                const start = startHour.value ? parseInt(startHour.value) : null;
+                const end = endHour.value ? parseInt(endHour.value) : null;
+
+                // Clear previous validation states
                 startHour.classList.remove('is-invalid');
                 endHour.classList.remove('is-invalid');
-                
+
                 let isValid = true;
 
-                if (start < 0 || start > 167) {
+                if (!start || start < 0 || start > 167) {
                     startHour.classList.add('is-invalid');
                     isValid = false;
                 }
-
-                if (end < 0 || end > 167 || start > end) {
+                if (!end || end < 0 || end > 167 || (start !== null && start > end)) {
                     endHour.classList.add('is-invalid');
                     isValid = false;
                 }
 
                 submitBtn.disabled = !isValid;
-                return isValid;
             }
 
-            // Real-time validation
+            // Validate on input
             startHour.addEventListener('input', validateInputs);
             endHour.addEventListener('input', validateInputs);
 
-            // Form submission
-            form.addEventListener('submit', function(e) {
-                if (!validateInputs()) {
-                    e.preventDefault();
-                    return;
-                }
-
+            // Show spinner on submit
+            form.addEventListener('submit', function() {
+                if (submitBtn.disabled) return;
                 spinner.style.display = 'inline-block';
                 submitBtn.disabled = true;
             });
