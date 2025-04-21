@@ -1,5 +1,7 @@
-# purpose of this file is to simulate and generate fake sensor which will create data
-# such as soil moisture, light, temperature) over 7 days with hourly readings (168 total points).
+#  This script simulates plant monitoring data, generates a CSV file, and provides an interactive menu for querying and visualizing the data.
+#  It includes functions to simulate soil moisture, light levels, and temperature, as well as a health check for the plant based on these parameters.
+#  The script also includes a watering prediction feature based on the moisture level and drop rate.
+#  The data is visualized using matplotlib, and the script allows for interactive querying of specific hours and zooming in on plots.
 import os
 import datetime
 import numpy as np
@@ -22,7 +24,7 @@ CONFIG = {
     'moisture_threshold': 30,
     'light_threshold': 200,
     'temp_hot_threshold': 28,
-    'csv_dir': 'csv_runs',
+    'csv_dir': 'csv runs',  # Updated to match your directory
     'csv_filename': 'plant_data_latest.csv',
     'start_time': datetime.datetime(2025, 3, 1, 0, 0),
 }
@@ -228,7 +230,6 @@ while True:
 
     else:
         print("Invalid choice—pick 1, 2, or 3!")
-
 
 
 

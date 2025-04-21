@@ -46,6 +46,10 @@
             height: 300px;
             margin-bottom: 1rem;
         }
+        .container-fluid {
+            padding-left: 2rem;
+            padding-right: 2rem;
+        }
         @media (max-width: 768px) {
             .dashboard-card {
                 padding: 1rem;
@@ -64,7 +68,17 @@
             </div>
         </div>
 
+        <!-- Error Display -->
+        {% if error %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="alert alert-danger">{{ error }}</div>
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Quick Stats -->
+        {% if not error %}
         <div class="row mb-4">
             <div class="col-md-3">
                 <div class="dashboard-card stat-card">
@@ -145,7 +159,7 @@
                                 <small>{{ alert.time }}</small>
                             </div>
                             <p class="mb-1">{{ alert.message }}</p>
-                            <small>Status: 
+                            <small>Status:
                                 <span class="health-indicator health-{{ alert.severity }}"></span>
                                 {{ alert.severity|title }}
                             </small>
@@ -155,6 +169,7 @@
                 </div>
             </div>
         </div>
+        {% endif %}
         {% endif %}
 
         <div class="row mt-4">
@@ -169,4 +184,4 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://kit.fontawesome.com/a076d05399.js"></script>
 </body>
-</html> 
+</html>

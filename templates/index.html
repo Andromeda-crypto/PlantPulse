@@ -11,17 +11,21 @@
 <body>
     <div class="container text-center mt-5">
         <h1 class="display-4 mb-5 animate__animated animate__fadeIn">Welcome to PlantPulse</h1>
+        <!-- Error Display -->
+        {% if load_error %}
+        <div class="alert alert-danger mb-4">{{ load_error }}</div>
+        {% endif %}
         <div class="d-flex flex-wrap justify-content-center">
             <a href="/query" class="btn btn-primary btn-custom mx-2 my-2 animate__animated animate__bounceIn">Query Hour</a>
             <a href="/zoom" class="btn btn-primary btn-custom mx-2 my-2 animate__animated animate__bounceIn">Zoom Plot</a>
             <a href="/photo" class="btn btn-primary btn-custom mx-2 my-2 animate__animated animate__bounceIn">Photo Scan</a>
+            <a href="/dashboard" class="btn btn-primary btn-custom mx-2 my-2 animate__animated animate__bounceIn">Dashboard</a>
             <a href="/exit" class="btn btn-secondary btn-custom mx-2 my-2 animate__animated animate__bounceIn" onclick="return confirm('Sure you want to exit?')">Exit</a>
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
-
 
 
 

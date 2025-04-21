@@ -17,31 +17,39 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
-CSV_DIR = os.path.join(BASE_DIR, 'csv_runs')
+UPLOAD_FOLDER = os.path.join(BASE_DIR, 'Uploads')
+CSV_DIR = os.path.join(BASE_DIR, 'csv runs')  # Updated to match your directory
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# Create upload directory
+# Create directories
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(CSV_DIR, exist_ok=True)
 
 # Load latest CSV
 def load_latest_csv():
     try:
+        logger.info(f"Searching for CSV files in {CSV_DIR}")
         csv_files = glob.glob(os.path.join(CSV_DIR, 'plant_data_*.csv'))
+        logger.info(f"Found CSV files: {csv_files}")
         if not csv_files:
-            raise FileNotFoundError("No CSV files found in csv_runs/")
+            raise FileNotFoundError(f"No CSV files found in {CSV_DIR}")
         latest_csv = max(csv_files, key=os.path.getctime)
         logger.info(f"Loading CSV: {latest_csv}")
-        return pd.read_csv(latest_csv)
+        df = pd.read_csv(latest_csv)
+        required_columns = ['Timestamp', 'Soilmoisture', 'Lightlevel', 'Temperature', 'Health_status']
+        if not all(col in df.columns for col in required_columns):
+            raise ValueError(f"CSV missing required columns: {required_columns}")
+        logger.info(f"Loaded DataFrame with {len(df)} rows")
+        return df, None
     except FileNotFoundError as e:
         logger.error(str(e))
-        return pd.DataFrame()
+        return pd.DataFrame(), str(e)
     except Exception as e:
         logger.error(f"Error loading CSV: {str(e)}")
-        return pd.DataFrame()
+        return pd.DataFrame(), str(e)
 
-Data = load_latest_csv()
+Data, load_error = load_latest_csv()
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -49,8 +57,9 @@ def allowed_file(filename):
 @app.route('/')
 def home():
     try:
-        return render_template('index.html')
+        return render_template('index.html', load_error=load_error)
     except TemplateNotFound:
+        logger.error("Index template not found")
         return "Error: Home template not found.", 500
 
 @app.route('/photo', methods=['GET', 'POST'])
@@ -155,19 +164,22 @@ def photo():
     try:
         return render_template('photo.html', message=None)
     except TemplateNotFound:
+        logger.error("Photo template not found")
         return "Error: Photo template not found.", 500
 
 @app.route('/uploads/<filename>')
 def serve_upload(filename):
     filename = secure_filename(filename)
     if not os.path.exists(os.path.join(app.config['UPLOAD_FOLDER'], filename)):
+        logger.error(f"File not found: {filename}")
         return "File not found", 404
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 @app.route('/query', methods=['GET', 'POST'])
 def query():
     if Data.empty:
-        return render_template('query.html', result="Error: No data available")
+        logger.warning("Query route: No data available")
+        return render_template('query.html', result=f"Error: No data available - {load_error}")
     if request.method == 'POST':
         try:
             hour = int(request.form['hour'])
@@ -188,12 +200,14 @@ def query():
     try:
         return render_template('query.html', result=None)
     except TemplateNotFound:
+        logger.error("Query template not found")
         return "Error: Query template not found.", 500
 
 @app.route('/zoom', methods=['GET', 'POST'])
 def zoom():
     if Data.empty:
-        return render_template('zoom.html', error="Error: No data available")
+        logger.warning("Zoom route: No data available")
+        return render_template('zoom.html', error=f"Error: No data available - {load_error}")
     if request.method == 'POST':
         try:
             start_hour = int(request.form['start_hour'])
@@ -233,6 +247,7 @@ def zoom():
     try:
         return render_template('zoom.html', plot_html=None, error=None)
     except TemplateNotFound:
+        logger.error("Zoom template not found")
         return "Error: Zoom template not found.", 500
 
 @app.route('/exit')
@@ -242,7 +257,8 @@ def exit_route():
 @app.route('/dashboard')
 def dashboard():
     if Data.empty:
-        return render_template('dashboard.html', error="Error: No data available")
+        logger.warning("Dashboard route: No data available")
+        return render_template('dashboard.html', error=f"Error: No data available - {load_error}")
     try:
         stats = {
             'avg_moisture': round(Data['Soilmoisture'].mean(), 2),
@@ -263,8 +279,10 @@ def dashboard():
                               health_chart=health_chart,
                               alerts=alerts)
     except Exception as e:
+        logger.error(f"Dashboard error: {str(e)}")
         return render_template('dashboard.html', error=str(e))
     except TemplateNotFound:
+        logger.error("Dashboard template not found")
         return "Error: Dashboard template not found.", 500
 
 def calculate_health_score(data):
@@ -328,7 +346,7 @@ def generate_alerts(data):
     return alerts
 
 if __name__ == '__main__':
-    app.run(debug=False)
+    app.run(debug=True)  # Changed to debug=True for better error reporting
 
 
 
