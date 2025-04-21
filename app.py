@@ -239,7 +239,7 @@ def zoom():
             too_hot = zoomed_data[zoomed_data['Health_status'] == 'Too Hot Plant should be exposed to less heat']
             fig.add_trace(go.Scatter(x=too_hot['Timestamp'], y=too_hot['Temperature'],
                                     mode='markers', name='Too Hot', marker=dict(color='purple', size=10)), row=3, col=1)
-            fig.update_layout(height=600, width='100%', title_text="Zoomed Plant Data")
+            fig.update_layout(height=600, width=800, title_text="Zoomed Plant Data")
             fig.update_xaxes(title_text="Time", row=1, col=1)
             fig.update_xaxes(title_text="Time", row=2, col=1)
             fig.update_xaxes(title_text="Time", row=3, col=1)
@@ -254,15 +254,14 @@ def zoom():
         except KeyError as e:
             logger.error(f"KeyError in zoom route: {str(e)}, Form data: {request.form}")
             return render_template('zoom.html', error=f"Form error: Missing field {str(e)}")
+        except Exception as e:
+            logger.error(f"Unexpected error in zoom route: {str(e)}, Form data: {request.form}")
+            return render_template('zoom.html', error=f"Error generating plot: {str(e)}")
     try:
         return render_template('zoom.html', plot_html=None, error=None)
     except TemplateNotFound:
         logger.error("Zoom template not found")
         return "Error: Zoom template not found.", 500
-
-@app.route('/exit')
-def exit_route():
-    return redirect(url_for('home'))
 
 @app.route('/dashboard')
 def dashboard():
@@ -305,21 +304,21 @@ def create_moisture_chart(data):
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=data['Timestamp'], y=data['Soilmoisture'],
                             mode='lines', name='Soil Moisture', line=dict(color='blue')))
-    fig.update_layout(title='Soil Moisture Over Time', xaxis_title='Time', yaxis_title='Moisture (%)', height=300)
+    fig.update_layout(title='Soil Moisture Over Time', xaxis_title='Time', yaxis_title='Moisture (%)', height=300, width=600)
     return fig.to_html(full_html=False)
 
 def create_light_chart(data):
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=data['Timestamp'], y=data['Lightlevel'],
                             mode='lines', name='Light Level', line=dict(color='orange')))
-    fig.update_layout(title='Light Level Over Time', xaxis_title='Time', yaxis_title='Light (lux)', height=300)
+    fig.update_layout(title='Light Level Over Time', xaxis_title='Time', yaxis_title='Light (lux)', height=300, width=600)
     return fig.to_html(full_html=False)
 
 def create_temperature_chart(data):
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=data['Timestamp'], y=data['Temperature'],
                             mode='lines', name='Temperature', line=dict(color='red')))
-    fig.update_layout(title='Temperature Over Time', xaxis_title='Time', yaxis_title='Temperature (°C)', height=300)
+    fig.update_layout(title='Temperature Over Time', xaxis_title='Time', yaxis_title='Temperature (°C)', height=300, width=600)
     return fig.to_html(full_html=False)
 
 def create_health_chart(data):
@@ -327,7 +326,7 @@ def create_health_chart(data):
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=data['Timestamp'], y=health_scores,
                             mode='lines', name='Health Score', line=dict(color='green')))
-    fig.update_layout(title='Plant Health Score Over Time', xaxis_title='Time', yaxis_title='Health Score', height=300)
+    fig.update_layout(title='Plant Health Score Over Time', xaxis_title='Time', yaxis_title='Health Score', height=300, width=600)
     return fig.to_html(full_html=False)
 
 def generate_alerts(data):
@@ -351,7 +350,7 @@ def generate_alerts(data):
             'title': 'High Temperature',
             'message': 'Plant is too hot',
             'severity': 'danger',
-            'time': data['Timestamp'].ilic[-1]
+            'time': data['Timestamp'].iloc[-1]
         })
     return alerts
 

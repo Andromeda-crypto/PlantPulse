@@ -20,13 +20,21 @@
             <a href="/zoom" class="btn btn-primary btn-custom mx-2 my-2 animate__animated animate__bounceIn">Zoom Plot</a>
             <a href="/photo" class="btn btn-primary btn-custom mx-2 my-2 animate__animated animate__bounceIn">Photo Scan</a>
             <a href="/dashboard" class="btn btn-primary btn-custom mx-2 my-2 animate__animated animate__bounceIn">Dashboard</a>
-            <a href="/exit" class="btn btn-secondary btn-custom mx-2 my-2 animate__animated animate__bounceIn" onclick="return confirm('Sure you want to exit?')">Exit</a>
+            <button class="btn btn-secondary btn-custom mx-2 my-2 animate__animated animate__bounceIn" onclick="exitApp()">Exit</button>
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function exitApp() {
+            if (confirm('Sure you want to exit?')) {
+                window.close();
+                // Fallback message if window.close() doesn't work
+                document.body.innerHTML = '<div class="container text-center mt-5"><h2>Application Closed</h2><p>Please close this tab manually if it did not close automatically.</p></div>';
+            }
+        }
+    </script>
 </body>
 </html>
-
 
 
 
