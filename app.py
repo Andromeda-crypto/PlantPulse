@@ -10,6 +10,7 @@ import logging
 from PIL import Image
 import glob
 from jinja2 import TemplateNotFound
+import sqlite3
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -27,29 +28,16 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(CSV_DIR, exist_ok=True)
 
 # Load latest CSV
-def load_latest_csv():
+def load_latest_data():
     try:
-        logger.info(f"Searching for CSV files in {CSV_DIR}")
-        csv_files = glob.glob(os.path.join(CSV_DIR, 'plant_data_*.csv'))
-        logger.info(f"Found {len(csv_files)} CSV files")
-        if not csv_files:
-            raise FileNotFoundError(f"No CSV files found in {CSV_DIR}")
-        latest_csv = max(csv_files, key=os.path.getctime)
-        logger.info(f"Loading CSV: {latest_csv}")
-        df = pd.read_csv(latest_csv)
-        required_columns = ['Timestamp', 'Soilmoisture', 'Lightlevel', 'Temperature', 'Health_status']
-        if not all(col in df.columns for col in required_columns):
-            raise ValueError(f"CSV missing required columns: {required_columns}")
-        logger.info(f"Loaded DataFrame with {len(df)} rows")
-        return df, None
-    except FileNotFoundError as e:
-        logger.error(str(e))
-        return pd.DataFrame(), str(e)
+        conn= sqlite3().conect('plantpulse.db')
+        df = pd.read_sqll('SELECT * FROM readings ORDER BY timestamp DESC LIMIT 168',conn)
+        conn.close()
+        if df.empty:
+            return pd.DataFrame(), "No data in database"
+        return df,None
     except Exception as e:
-        logger.error(f"Error loading CSV: {str(e)}")
-        return pd.DataFrame(), str(e)
-
-Data, load_error = load_latest_csv()
+        return pd.Dataframe(),str(e)
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -57,6 +45,7 @@ def allowed_file(filename):
 @app.route('/')
 def home():
     try:
+        Data, load_error = load_latest_data()
         return render_template('index.html', load_error=load_error)
     except TemplateNotFound:
         logger.error("Index template not found")
@@ -177,6 +166,7 @@ def serve_upload(filename):
 
 @app.route('/query', methods=['GET', 'POST'])
 def query():
+    Data, load_error = load_latest_data()
     if Data.empty:
         logger.warning("Query route: No data available")
         return render_template('query.html', result=f"Error: No data available - {load_error}")
@@ -205,6 +195,7 @@ def query():
 
 @app.route('/zoom', methods=['GET', 'POST'])
 def zoom():
+    Data, load_error = load_latest_data()
     if Data.empty:
         logger.warning("Zoom route: No data available")
         return render_template('zoom.html', error=f"Error: No data available - {load_error}")
@@ -265,34 +256,15 @@ def zoom():
 
 @app.route('/dashboard')
 def dashboard():
-    if Data.empty:
-        logger.warning("Dashboard route: No data available")
-        return render_template('dashboard.html', error=f"Error: No data available - {load_error}")
-    try:
-        stats = {
-            'avg_moisture': round(Data['Soilmoisture'].mean(), 2),
-            'avg_light': round(Data['Lightlevel'].mean(), 2),
-            'avg_temp': round(Data['Temperature'].mean(), 2),
-            'health_score': calculate_health_score(Data)
-        }
-        moisture_chart = create_moisture_chart(Data)
-        light_chart = create_light_chart(Data)
-        temp_chart = create_temperature_chart(Data)
-        health_chart = create_health_chart(Data)
-        alerts = generate_alerts(Data)
-        return render_template('dashboard.html',
-                              stats=stats,
-                              moisture_chart=moisture_chart,
-                              light_chart=light_chart,
-                              temp_chart=temp_chart,
-                              health_chart=health_chart,
-                              alerts=alerts)
-    except Exception as e:
-        logger.error(f"Dashboard error: {str(e)}")
-        return render_template('dashboard.html', error=str(e))
-    except TemplateNotFound:
-        logger.error("Dashboard template not found")
-        return "Error: Dashboard template not found.", 500
+    Data ,error = load_latest_data()
+    if error:
+        return render_template('dashboard.html',error=error)
+    stats = {
+        'avg_moisture' : round(Data['Soilmoisture'].mean(),2),
+        'avg_light' : round(Data['Lightlevel'].mean(),2),
+        'avg_temp' : round(Data['Temperature'].mean(),2)
+    }
+    return render_template('dashboard.html', stats=stats)
 
 def calculate_health_score(data):
     moisture_score = min(100, max(0, (data['Soilmoisture'].mean() / 100) * 100))
