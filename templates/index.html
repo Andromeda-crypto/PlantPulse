@@ -1,38 +1,60 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
     <title>PlantPulse</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { padding-top: 70px; }
+    </style>
 </head>
 <body>
-    <div class="container text-center mt-5">
-        <h1 class="display-4 mb-5 animate__animated animate__fadeIn">Welcome to PlantPulse</h1>
-        <!-- Error Display -->
-        {% if load_error %}
-        <div class="alert alert-danger mb-4">{{ load_error }}</div>
-        {% endif %}
-        <div class="d-flex flex-wrap justify-content-center">
-            <a href="/query" class="btn btn-primary btn-custom mx-2 my-2 animate__animated animate__bounceIn">Query Hour</a>
-            <a href="/zoom" class="btn btn-primary btn-custom mx-2 my-2 animate__animated animate__bounceIn">Zoom Plot</a>
-            <a href="/photo" class="btn btn-primary btn-custom mx-2 my-2 animate__animated animate__bounceIn">Photo Scan</a>
-            <a href="/dashboard" class="btn btn-primary btn-custom mx-2 my-2 animate__animated animate__bounceIn">Dashboard</a>
-            <button class="btn btn-secondary btn-custom mx-2 my-2 animate__animated animate__bounceIn" onclick="exitApp()">Exit</button>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="/">PlantPulse</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/query">Query</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/zoom">Zoom</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/photo">Photo</a>
+                    </li>
+                </ul>
+            </div>
         </div>
+    </nav>
+    <div class="container mt-4">
+        <h2>Welcome to PlantPulse</h2>
+        <p>Monitor your plant's health with real-time data and photo analysis.</p>
+        {% if load_error %}
+        <div class="alert alert-danger">{{ load_error }}</div>
+        {% endif %}
+        <div class="row">
+            <div class="col-md-4">
+                <a href="/dashboard" class="btn btn-primary w-100 mb-3">View Dashboard</a>
+            </div>
+            <div class="col-md-4">
+                <a href="/query" class="btn btn-primary w-100 mb-3">Query Data</a>
+            </div>
+            <div class="col-md-4">
+                <a href="/zoom" class="btn btn-primary w-100 mb-3">Zoom Data</a>
+            </div>
+        </div>
+        <a href="/photo" class="btn btn-success w-100">Upload Plant Photo</a>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        function exitApp() {
-            if (confirm('Sure you want to exit?')) {
-                window.close();
-                // Fallback message if window.close() doesn't work
-                document.body.innerHTML = '<div class="container text-center mt-5"><h2>Application Closed</h2><p>Please close this tab manually if it did not close automatically.</p></div>';
-            }
-        }
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
 
