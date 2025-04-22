@@ -37,7 +37,7 @@ def load_latest_data():
             return pd.DataFrame(), "No data in database"
         return df,None
     except Exception as e:
-        return pd.Dataframe(),str(e)
+        return pd.DataFrame(),str(e)
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
