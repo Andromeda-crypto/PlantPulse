@@ -167,9 +167,9 @@ def serve_upload(filename):
 @app.route('/query', methods=['GET', 'POST'])
 def query():
     Data, load_error = load_latest_data()
-    if Data.empty:
-        logger.warning("Query route: No data available")
-        return render_template('query.html', result=f"Error: No data available - {load_error}")
+    if load_error:
+        return render_template('zoom.html',error = load_error)
+    
     if request.method == 'POST':
         try:
             hour = int(request.form['hour'])
