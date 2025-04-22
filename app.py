@@ -30,8 +30,8 @@ os.makedirs(CSV_DIR, exist_ok=True)
 # Load latest CSV
 def load_latest_data():
     try:
-        conn= sqlite3().conect('plantpulse.db')
-        df = pd.read_sqll('SELECT * FROM readings ORDER BY timestamp DESC LIMIT 168',conn)
+        conn= sqlite3().connect('plantpulse.db')
+        df = pd.read_sql('SELECT * FROM readings ORDER BY timestamp DESC LIMIT 168',conn)
         conn.close()
         if df.empty:
             return pd.DataFrame(), "No data in database"
@@ -256,15 +256,22 @@ def zoom():
 
 @app.route('/dashboard')
 def dashboard():
-    Data ,error = load_latest_data()
+    Data, error = load_latest_data()
     if error:
-        return render_template('dashboard.html',error=error)
+        return render_template('dashboard.html', error=error)
     stats = {
-        'avg_moisture' : round(Data['Soilmoisture'].mean(),2),
-        'avg_light' : round(Data['Lightlevel'].mean(),2),
-        'avg_temp' : round(Data['Temperature'].mean(),2)
+        'avg_moisture': round(Data['soil_moisture'].mean(), 2),
+        'avg_light': round(Data['light_level'].mean(), 2),    
+        'avg_temp': round(Data['temperature'].mean(), 2)      
     }
     return render_template('dashboard.html', stats=stats)
+@app.route('/Home')
+def home():
+    return render_template('index.html')
+
+@app.route('/Phote')
+def photo():
+    return render_template('phot.html')
 
 def calculate_health_score(data):
     moisture_score = min(100, max(0, (data['Soilmoisture'].mean() / 100) * 100))
