@@ -64,7 +64,7 @@ def train(model, train_loader, val_loader, epochs=10):
         print(f"Validation - Loss: {val_loss:.4f} - Accuracy: {val_acc:.4f}")
 
 def main():
-    DATA_DIR = 'processed_dataset/PlantVillage_species'  # Update path as needed
+    DATA_DIR = 'processed_dataset/plant_images_subset'  # Update path as needed
     train_loader, val_loader, classes = get_data_loaders(DATA_DIR)
     model = create_model(len(classes))
     train(model, train_loader, val_loader, epochs=10)
