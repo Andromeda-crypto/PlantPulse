@@ -1,63 +1,79 @@
-import os
-import tensorflow as tf
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
-from tensorflow.keras.models import MobileNetV2
-from tensorflow.keras.layers import Dense, GlobalAveragePooling2D
-from tensorflow.keras.models import Model
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torchvision import models
+from data_loader import get_data_loaders
 
-# parameters
-IMG_SIZE = (224,224)
-BATCH_SIZE = 32
-DATASET_DIR = 'dataset/PlantVillage/processed'
-NUM_CLASSES = len(os.listdir(DATASET_DIR))
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-base_model = MobileNetV2(weights= 'imagenet', include_top = False, input_shape=(*IMG_SIZE, 3))
-base_model.trainable = False
+def create_model(num_classes):
+    model = models.mobilenet_v2(pretrained=True)
+    for param in model.features.parameters():
+        param.requires_grad = False
 
-x = base_model.output
-x = GlobalAveragePooling2D()(x)
-x = Dense(128,activation='relu')(x)
+    model.classifier[1] = nn.Sequential(
+        nn.Linear(model.last_channel, 128),
+        nn.ReLU(),
+        nn.Dropout(0.3),
+        nn.Linear(128, num_classes)
+    )
+    return model.to(device)
 
-predictions = Dense(NUM_CLASSES, activation='softmax')(x)
-model = Model(inputs=base_model.input,outputs=predictions)
+def train(model, train_loader, val_loader, epochs=10):
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.Adam(model.classifier.parameters(), lr=0.001)
 
-model.complile(optimizer='adam',loss='categorical_crossentropy',metrics=['accuracy'])
+    for epoch in range(epochs):
+        model.train()
+        running_loss = 0.0
+        correct = 0
+        total = 0
+        for inputs, labels in train_loader:
+            inputs, labels = inputs.to(device), labels.to(device)
+            optimizer.zero_grad()
+            outputs = model(inputs)
+            loss = criterion(outputs, labels)
+            loss.backward()
+            optimizer.step()
+            running_loss += loss.item() * inputs.size(0)
+            _, preds = torch.max(outputs, 1)
+            correct += (preds == labels).sum().item()
+            total += labels.size(0)
 
-train_datagen = ImageDataGenerator(
-    rescale = 1./255,
-    rotation_range = 20,
-    width_shift_range = 0.2,
-    height_shift_range = 0.2,
-    shear_range = 0.2,
-    zoom_range = 0.2,
-    horizontal_flip = True,
-    validation_split = 0.2
-)
+        epoch_loss = running_loss / total
+        epoch_acc = correct / total
+        print(f"Epoch {epoch+1}/{epochs} - Loss: {epoch_loss:.4f} - Accuracy: {epoch_acc:.4f}")
 
-train_generator = train_datagen.flow_from_directory(
-    DATASET_DIR,
-    target_size = IMG_SIZE,
-    batch_size = BATCH_SIZE,
-    clas_mode = 'categorical',
-    subset = 'training'
+        # Validation
+        model.eval()
+        val_loss = 0.0
+        val_correct = 0
+        val_total = 0
+        with torch.no_grad():
+            for inputs, labels in val_loader:
+                inputs, labels = inputs.to(device), labels.to(device)
+                outputs = model(inputs)
+                loss = criterion(outputs, labels)
+                val_loss += loss.item() * inputs.size(0)
+                _, preds = torch.max(outputs, 1)
+                val_correct += (preds == labels).sum().item()
+                val_total += labels.size(0)
 
-)
+        val_loss /= val_total
+        val_acc = val_correct / val_total
+        print(f"Validation - Loss: {val_loss:.4f} - Accuracy: {val_acc:.4f}")
 
-validation_generator = train_datagen.flow_from_directory(
-    DATASET_DIR,
-    target_size = IMG_SIZE,
-    batch_size = BATCH_SIZE,
-    class_mode = 'categorical',
-    subset = 'training'
-)
-# train the model
-model.fit(
-    train_generator,
-    epochs = 10,
-    validatioin_data = validation_generator
-)
+def main():
+    DATA_DIR = 'processed_dataset/PlantVillage_species'  # Update path as needed
+    train_loader, val_loader, classes = get_data_loaders(DATA_DIR)
+    model = create_model(len(classes))
+    train(model, train_loader, val_loader, epochs=10)
 
-# save the model
+    # Save model and labels
+    torch.save(model.state_dict(), 'models/plant_species_model.pth')
+    import json
+    with open('models/plant_species_labels.json', 'w') as f:
+        json.dump(classes, f)
 
-os.makedirs('models',exist_ok=True)
-model.save('models/plant_disease_model.h5')
+if __name__ == "__main__":
+    main()
