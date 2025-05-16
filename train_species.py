@@ -24,6 +24,7 @@ def train(model, train_loader, val_loader, epochs=10):
     optimizer = optim.Adam(model.classifier.parameters(), lr=0.001)
 
     for epoch in range(epochs):
+        print(f" Starting epoch {epoch+1}/{epochs}") # to get real time progress 
         model.train()
         running_loss = 0.0
         correct = 0
@@ -43,6 +44,8 @@ def train(model, train_loader, val_loader, epochs=10):
         epoch_loss = running_loss / total
         epoch_acc = correct / total
         print(f"Epoch {epoch+1}/{epochs} - Loss: {epoch_loss:.4f} - Accuracy: {epoch_acc:.4f}")
+        
+
 
         # Validation
         model.eval()
