@@ -1,6 +1,6 @@
 import cv2
 import os
-from flask import Flask, render_template, request, send_from_directory, redirect, url_for
+from flask import Flask, render_template, request, send_from_directory, redirect, url_for, session
 import pandas as pd
 import plotly.graph_objects as go
 from jinja2 import TemplateNotFound
@@ -30,7 +30,7 @@ os.makedirs(CSV_DIR, exist_ok=True)
 def load_latest_data():
     """Load the latest 168 readings from SQLite."""
     try:
-        conn = sqlite3.connect(DB_PATH)  # Fixed: sqlite3.connect
+        conn = sqlite3.connect(DB_PATH)  
         df = pd.read_sql('SELECT * FROM readings ORDER BY timestamp DESC LIMIT 168', conn)
         conn.close()
         if df.empty:
@@ -240,9 +240,16 @@ def zoom():
 
 @app.route('/dashboard')
 def dashboard():
-    Data, error = load_latest_data()
+    username = session.get('username')
+    if not username:
+        return render_template('dashboard.html', error=None, username=username)
+   
+    Data, error = load_latest_data(username)
+
     if error:
-        return render_template('dashboard.html', error=error)
+        return render_template('dashboard.html', error=None, username=username,stats=None,moisture_chart=None,light_chart=None,
+                               temp_chart=None,health_chart=None)
+
     try:
         stats = {
             'avg_moisture': round(Data['soil_moisture'].mean(), 2),
@@ -255,9 +262,27 @@ def dashboard():
         health_chart = create_health_chart(Data)
         alerts = generate_alerts(Data)
     except KeyError as e:
-        return render_template('dashboard.html', error=f"Column not found: {str(e)}")
+        return render_template('dashboard.html', error=f"Column not found: {str(e)}",username=username)
     return render_template('dashboard.html', stats=stats, moisture_chart=moisture_chart,
-                          light_chart=light_chart, temp_chart=temp_chart, health_chart=health_chart, alerts=alerts)
+                          light_chart=light_chart, temp_chart=temp_chart, health_chart=health_chart,error=None, alerts=alerts,username=username)
+
+@app.route('/Login',methods= ['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username  = request.form.get('username').strip()
+        if username:
+            session['username'] = username
+            return redirect(url_for('dashboard'))
+        else:
+            return render_template('login.html', error='Please enter a username')
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    session.pop('username',None)
+    return redirect(url_for('login'))
+
+    
 
 def calculate_health_score(data):
     moisture_score = min(100, max(0, (data['soil_moisture'].mean() / 100) * 100))

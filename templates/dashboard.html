@@ -6,7 +6,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: 'Roboto', sans-serif;
+            font-family: 'Roboto', 'Times New Roman', Times, serif;
             background: url('https://www.toptal.com/designers/subtlepatterns/uploads/leaves.png') repeat;
             background-color: #f4f7f6;
             padding-top: 80px;
@@ -53,7 +53,7 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="/">Home</a>
+                        <a class="nav-link active" href="/Home">Home</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link active" href="/dashboard">Dashboard</a>
@@ -67,12 +67,16 @@
                     <li class="nav-item">
                         <a class="nav-link" href="/photo">Photo</a>
                     </li>
+                    <li class = "nav-item">
+                        <a class = "nav-link" href = "/logout">logout
+                    </a></li>
                 </ul>
             </div>
         </div>
     </nav>
     <div class="container mt-4">
-        <h1 class="text-center mb-4" style="color: #2e7d32;">PlantPulse Dashboard</h1>
+        <h1 class="text-center mb-4" style="color: #2e7d32;">Welcome, {{ username }}</h1>
+        <h2>Welcome {{username}}!</h2>
         {% if error %}
         <div class="alert alert-danger">{{ error }}</div>
         {% endif %}
