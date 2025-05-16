@@ -86,7 +86,7 @@ def photo():
                 result = "Image is blurry! Please upload a clearer image."
                 return render_template('photo.html', message=f"Image Saved: {filename}", filename=filename, result=result)
             edges = cv2.Canny(img, 100, 200)
-            edge_density = np.sum(edges) / (img.shape[0] * img.shape[1])
+            edge_density = np.sum(edges) / 255 / (img.shape[0] * img.shape[1])
             edge_count = np.sum(edges) / 255
             hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
             brown_mask = cv2.inRange(hsv, (10, 20, 0), (40, 100, 255))
@@ -104,7 +104,7 @@ def photo():
             elif is_soil and not is_plant:
                 content = "soil"
             elif is_soil and is_plant and green_percent > 40 and brown_percent > 40:
-                content = "Plant and soil"
+                content = "Plant and Soil"
             result = ""
             if content == "unknown":
                 result = "Not soil or plant–upload a soil or plant pic!"
