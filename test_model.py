@@ -55,7 +55,7 @@ def main():
                     species_pred = predict(image_path,model,species_labels)
                     is_correct = (species_pred == class_name)
                     total_count += 1
-                    correct_count = int(is_correct)
+                    correct_count += int(is_correct)
                     print(f"{class_name}/{filename} -> Predicted : {species_pred} -> {'✅' if is_correct else '❌'}")
 
     accuracy = (correct_count/total_count) if total_count > 0 else 0
