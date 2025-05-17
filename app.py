@@ -46,7 +46,7 @@ def allowed_file(filename):
 def home():
     try:
         Data, load_error = load_latest_data()
-        return render_template('home.html', load_error=load_error)
+        return render_template('home.js', load_error=load_error)
     except TemplateNotFound:
         logger.error("Index template not found")
         return "Error: Home template not found.", 500
