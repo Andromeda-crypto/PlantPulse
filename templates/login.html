@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
     <h2>Login</h2>
@@ -12,21 +13,13 @@
         <button type="submit">Login</button>
     </form>
 
+    <!-- Include your JS here -->
+    <script src="{{ url_for('static', filename='login.js') }}"></script>
     <script>
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();  // Prevent actual form submission
-            const username = document.getElementById('username').value.trim();
+  alert("inline JS loaded!");
+</script>
 
-            if (username) {
-                // Store username locally (for testing purposes only)
-                localStorage.setItem('username', username);
-
-                // Redirect to dashboard
-                window.location.href = '/dashboard'; 
-            } else {
-                alert("Please enter a username.");
-            }
-        });
-    </script>
 </body>
 </html>
+
+

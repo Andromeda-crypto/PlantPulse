@@ -15,7 +15,7 @@ import sqlite3
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static')
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'Uploads')
 CSV_DIR = os.path.join(BASE_DIR, 'csv runs')
@@ -44,12 +44,10 @@ def allowed_file(filename):
 
 @app.route('/')
 def home():
-    try:
-        Data, load_error = load_latest_data()
-        return render_template('index.html', load_error=load_error)
-    except TemplateNotFound:
-        logger.error("Index template not found")
-        return "Error: Home template not found.", 500
+    if "username" in session:
+        return redirect(url_for('dashboard'))
+    return redirect(url_for('login'))
+    
 
 @app.route('/photo', methods=['GET', 'POST'])
 def photo():
@@ -265,7 +263,7 @@ def dashboard():
     return render_template('dashboard.html', stats=stats, moisture_chart=moisture_chart,
                           light_chart=light_chart, temp_chart=temp_chart, health_chart=health_chart,error=None, alerts=alerts,username=username)
 
-@app.route('/Login',methods= ['GET', 'POST'])
+@app.route('/login',methods= ['GET', 'POST'])
 def login():
     if request.method == 'POST':
         username  = request.form.get('username').strip()
