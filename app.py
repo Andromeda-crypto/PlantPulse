@@ -253,9 +253,9 @@ def dashboard():
                                   temperature_chart=None, health_chart=None)
         
     stats = {
-        "average_moisture": round(Data('soil_moisture').mean(),2),
-        "average_light": round(Data('light_level').mean(),2),
-        "average_temperature": round(Data('temperature').mean(),2),
+        "average_moisture": round(Data['soil_moisture'].mean(),2),
+        "average_light": round(Data['light_level'].mean(),2),
+        "average_temperature": round(Data['temperature'].mean(),2),
 
     }
 
@@ -299,7 +299,7 @@ def login():
         username  = request.form.get('username').strip()
         if username:
             session['username'] = username
-            return redirect(url_for('dashboard'))
+            return redirect(url_for('home'))
         else:
             return render_template('login.html', error='Please enter a username')
     return render_template('login.html')
