@@ -46,7 +46,7 @@ def allowed_file(filename):
 def home():
     try:
         Data, load_error = load_latest_data()
-        return render_template('index.html', load_error=load_error)
+        return render_template('home.html', load_error=load_error)
     except TemplateNotFound:
         logger.error("Index template not found")
         return "Error: Home template not found.", 500
@@ -241,10 +241,9 @@ def zoom():
 @app.route('/dashboard')
 def dashboard():
     username = session.get('username')
-    if not username:
-        return render_template('dashboard.html', error=None, username=username)
+    
    
-    Data, error = load_latest_data(username)
+    Data, error = load_latest_data()
 
     if error:
         return render_template('dashboard.html', error=None, username=username,stats=None,moisture_chart=None,light_chart=None,
