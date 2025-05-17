@@ -263,6 +263,31 @@ def dashboard():
     return render_template('dashboard.html', stats=stats, moisture_chart=moisture_chart,
                           light_chart=light_chart, temp_chart=temp_chart, health_chart=health_chart,error=None, alerts=alerts,username=username)
 
+
+@app.route('/signup',methods=["GET", "POST"])
+def signup():
+    error = None
+    if request.method == "POST":
+        username = request.form.get("username","").strip()
+        email = request.form.get('email', '').strip()
+        password = request.form.get("password","").strip()
+        confirm_password = request.form.get("confirm_password","").strip()
+
+        if not username :
+            error = "Username is required\nPlease enter a username"
+        elif not email:
+            error = "Email is required\nPlease enter an email"
+        elif not password:  
+            error = "Password is required\nPlease enter a password"
+        elif confirm_password != password:
+            error = "Passwords do not match\nPlease confirm your password"
+        else:
+            # TODO : Add logic to save user data to database
+            session['username'] = username
+            return redirect(url_for('home'))
+    return render_template('signup.html', error=error)
+
+
 @app.route('/login',methods= ['GET', 'POST'])
 def login():
     if request.method == 'POST':
