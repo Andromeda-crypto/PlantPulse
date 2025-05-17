@@ -30,7 +30,13 @@ export default function Home() {
                  className="flex justify-center items-center"
                  >
                 <img 
-                    src=""
+                    src="https://www.istockphoto.com/illustrations/green-plant-logo"
+                    alt = "Plant Illustration"
+                    className="w-full max-w-sm"
+                    />
+                </motion.div>
+            </motion.div>
+        </main>
 
     )
 }
