@@ -15,7 +15,9 @@ import sqlite3
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+
 app = Flask(__name__, static_folder='static')
+app.secret_key = 'your_secret_key'
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'Uploads')
 CSV_DIR = os.path.join(BASE_DIR, 'csv runs')

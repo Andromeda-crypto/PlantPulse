@@ -1,27 +1,120 @@
-<!DOCTYPE HTML>
-<html lang='en'>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Login</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+    <style>
+        body {
+            background: linear-gradient(135deg, #6b8de3, #3a4edc);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: #fff;
+        }
+
+        .form-container {
+            background: rgba(255, 255, 255, 0.12);
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 350px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        label, input {
+            display: block;
+            width: 100%;
+        }
+
+        label {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        input {
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border: none;
+            font-size: 1rem;
+        }
+
+        button {
+            width: 100%;
+            background-color: #395ee3;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #2b4ecb;
+        }
+
+        .link {
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        .link a {
+            color: #cde0ff;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .link a:hover {
+            text-decoration: underline;
+        }
+
+        .error {
+            color: #ffbaba;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
-    <h2>Login</h2>
-    <form id="loginForm">
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" required />
-        <button type="submit">Login</button>
-    </form>
+    <div class="form-container">
+        <h2>Login</h2>
+        <div class="error" id="errorMsg">{{ error if error }}</div>
+        <form id="loginForm" method="POST" action="/login">
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" placeholder="Enter username" required />
 
-    <form id="loginForm">
-    <label for="username">Username:</label>
-    <input type="text" id="username" name="username" required />
-    <button type="submit">Login</button>
-</form>
-<p>Don't have an account? <a href="{{ url_for('signup') }}">Sign up here</a></p>
-<script src="{{ url_for('static', filename='login.js') }}"></script>
+            <button type="submit">Login</button>
+        </form>
+        <div class="link">
+            Don't have an account? <a href="/signup">Sign Up</a>
+        </div>
+    </div>
 
+    <script>
+        const loginForm = document.getElementById('loginForm');
+        const errorMsg = document.getElementById('errorMsg');
 
+        loginForm.addEventListener('submit', function (e) {
+            const username = loginForm.username.value.trim();
+
+            if (username.length < 3) {
+                e.preventDefault();
+                errorMsg.textContent = "Username must be at least 3 characters.";
+            }
+        });
+    </script>
 </body>
 </html>
 

@@ -4,9 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Sign Up</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
     <style>
-       
         body {
             background: linear-gradient(135deg, #6b8de3, #3a4edc);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -18,171 +17,124 @@
             color: #fff;
         }
 
-        .signup-container {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 30px 40px;
+        .form-container {
+            background: rgba(255, 255, 255, 0.12);
+            padding: 30px 35px;
             border-radius: 15px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-            width: 350px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+        }
+
+        h2 {
             text-align: center;
+            margin-bottom: 20px;
         }
 
-        .signup-container h2 {
-            margin-bottom: 25px;
-            font-weight: 700;
-            letter-spacing: 1.2px;
-            font-size: 2rem;
-        }
-
-        .signup-container label {
+        label {
             display: block;
-            text-align: left;
             margin-bottom: 5px;
             font-weight: 600;
-            font-size: 0.9rem;
         }
 
-        .signup-container input[type="text"],
-        .signup-container input[type="password"],
-        .signup-container input[type="email"] {
+        input {
             width: 100%;
-            padding: 12px 15px;
-            margin-bottom: 18px;
+            padding: 10px;
             border-radius: 8px;
             border: none;
+            margin-bottom: 15px;
             font-size: 1rem;
-            outline: none;
-            transition: box-shadow 0.3s ease;
+            box-sizing: border-box;
         }
 
-        .signup-container input[type="text"]:focus,
-        .signup-container input[type="password"]:focus,
-        .signup-container input[type="email"]:focus {
-            box-shadow: 0 0 8px 2px #7b9aff;
-        }
-
-        .signup-container button {
+        button {
             width: 100%;
             background-color: #395ee3;
             border: none;
             padding: 12px;
-            border-radius: 10px;
+            border-radius: 8px;
             color: white;
-            font-weight: 700;
             font-size: 1.1rem;
+            font-weight: 700;
             cursor: pointer;
-            transition: background-color 0.3s ease;
         }
 
-        .signup-container button:hover {
+        button:hover {
             background-color: #2b4ecb;
         }
 
-        .signup-container .error {
-            color: #ff6961;
-            font-weight: 600;
-            margin-bottom: 10px;
+        .error {
+            color: #ffbaba;
             font-size: 0.9rem;
+            margin-bottom: 12px;
+            text-align: center;
         }
 
-        .signup-container .link {
-            margin-top: 18px;
-            font-size: 0.9rem;
+        .link {
+            margin-top: 15px;
+            text-align: center;
         }
 
-        .signup-container .link a {
-            color: #a8c3ff;
+        .link a {
+            color: #cde0ff;
             text-decoration: none;
             font-weight: 600;
         }
 
-        .signup-container .link a:hover {
+        .link a:hover {
             text-decoration: underline;
         }
     </style>
 </head>
 <body>
-    <div class="signup-container">
+    <div class="form-container">
         <h2>Create Account</h2>
-        <form id="signupForm" novalidate method="POST" action="/signup">
-            {% if error %}
-            <div class="error">{{ error }}</div>
-            {% endif %}
-
-            <div class="error" id="errorMsg"></div>
-
-            <label for="username">Usernam e</label>
+        <div class="error" id="errorMsg">{{ error if error }}</div>
+        <form id="signupForm" method="POST" action="/signup">
+            <label for="username">Username</label>
             <input type="text" id="username" name="username" placeholder="Choose a username" required />
 
             <label for="email">Email</label>
             <input type="email" id="email" name="email" placeholder="Enter your email" required />
 
             <label for="password">Password</label>
-            <input type="password" id="password" name="password" placeholder="Create a password" required minlength="6" />
+            <input type="password" id="password" name="password" placeholder="Create a password" required />
 
-            <label for="confirmPassword">Confirm Password</label>
-            <input
-                type="password"
-                id="confirmPassword"
-                name="confirmPassword"
-                placeholder="Confirm your password"
-                required
-                minlength="6"
-            />
+            <label for="confirm_password">Confirm Password</label>
+            <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm your password" required />
 
             <button type="submit">Sign Up</button>
         </form>
         <div class="link">
-            Already have an account? <a href="/login">Login here</a>
+            Already have an account? <a href="/login">Login</a>
         </div>
     </div>
 
     <script>
         const form = document.getElementById('signupForm');
-        const errorMsg = document.getElementById('errorMsg');
+        const errorDiv = document.getElementById('errorMsg');
 
         form.addEventListener('submit', function (e) {
-            
-
-            
-            errorMsg.textContent = '';
-
-            const username = form.username.value.trim();
+            const password = form.password.value.trim();
+            const confirm = form.confirm_password.value.trim();
             const email = form.email.value.trim();
-            const password = form.password.value;
-            const confirmPassword = form.confirmPassword.value;
+            const username = form.username.value.trim();
 
-            
             if (username.length < 3) {
-                errorMsg.textContent = 'Username must be at least 3 characters.';
-                return;
+                errorDiv.textContent = "Username must be at least 3 characters.";
+                e.preventDefault();
+            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                errorDiv.textContent = "Please enter a valid email.";
+                e.preventDefault();
+            } else if (password.length < 6) {
+                errorDiv.textContent = "Password must be at least 6 characters.";
+                e.preventDefault();
+            } else if (password !== confirm) {
+                errorDiv.textContent = "Passwords do not match.";
+                e.preventDefault();
             }
-
-            if (!validateEmail(email)) {
-                errorMsg.textContent = 'Please enter a valid email address.';
-                return;
-            }
-
-            if (password.length < 6) {
-                errorMsg.textContent = 'Password must be at least 6 characters.';
-                return;
-            }
-
-            if (password !== confirmPassword) {
-                errorMsg.textContent = 'Passwords do not match.';
-                return;
-            }
-
-         
-            alert('Signup successful! You can now log in.');
-           
-            window.location.href = '/login';
         });
-
-        function validateEmail(email) {
-            
-            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-        }
     </script>
 </body>
 </html>
+
