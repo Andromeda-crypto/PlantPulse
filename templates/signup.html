@@ -104,10 +104,14 @@
 <body>
     <div class="signup-container">
         <h2>Create Account</h2>
-        <form id="signupForm" novalidate>
+        <form id="signupForm" novalidate method="POST" action="/signup">
+            {% if error %}
+            <div class="error">{{ error }}</div>
+            {% endif %}
+
             <div class="error" id="errorMsg"></div>
 
-            <label for="username">Username</label>
+            <label for="username">Usernam e</label>
             <input type="text" id="username" name="username" placeholder="Choose a username" required />
 
             <label for="email">Email</label>
@@ -138,7 +142,7 @@
         const errorMsg = document.getElementById('errorMsg');
 
         form.addEventListener('submit', function (e) {
-            e.preventDefault();
+            
 
             
             errorMsg.textContent = '';

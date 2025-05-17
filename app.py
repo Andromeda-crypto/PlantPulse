@@ -239,29 +239,32 @@ def zoom():
 @app.route('/dashboard')
 def dashboard():
     username = session.get('username')
+    if not username:
+        return redirect(url_for("login"))
+    user_data_file = f"data/{username}.csv"
+    if os.path.exists(user_data_file):
+        Data = pd.read_csv(user_data_file)
+    else:
+        Data, error = load_latest_data()
+        if error:
+            return render_template('dashboard.html',error=error,username=username,stats=None,moisture_chart=None, light_chart=None,
+                                  temperature_chart=None, health_chart=None)
+        
+    stats = {
+        "average_moisture": round(Data('soil_moisture').mean(),2),
+        "average_light": round(Data('light_level').mean(),2),
+        "average_temperature": round(Data('temperature').mean(),2),
+
+    }
+
+    moisture_chart = create_moisture_chart(Data)
+    light_chart = create_light_chart(Data)
+    temperature_chart = create_temperature_chart(Data)
+    health_chart = create_health_chart(Data)
+    alerts = generate_alerts(Data)
     
-   
-    Data, error = load_latest_data()
-
-    if error:
-        return render_template('dashboard.html', error=None, username=username,stats=None,moisture_chart=None,light_chart=None,
-                               temp_chart=None,health_chart=None)
-
-    try:
-        stats = {
-            'avg_moisture': round(Data['soil_moisture'].mean(), 2),
-            'avg_light': round(Data['light_level'].mean(), 2),
-            'avg_temp': round(Data['temperature'].mean(), 2)
-        }
-        moisture_chart = create_moisture_chart(Data)
-        light_chart = create_light_chart(Data)
-        temp_chart = create_temperature_chart(Data)
-        health_chart = create_health_chart(Data)
-        alerts = generate_alerts(Data)
-    except KeyError as e:
-        return render_template('dashboard.html', error=f"Column not found: {str(e)}",username=username)
-    return render_template('dashboard.html', stats=stats, moisture_chart=moisture_chart,
-                          light_chart=light_chart, temp_chart=temp_chart, health_chart=health_chart,error=None, alerts=alerts,username=username)
+    return render_template('dashboard.html',username=username,stats=stats,mositure_chart=moisture_chart, light_chart=light_chart,temperature_chart=temperature_chart,
+                           health_chart=health_chart,alerts=alerts)
 
 
 @app.route('/signup',methods=["GET", "POST"])
