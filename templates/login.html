@@ -110,6 +110,8 @@
         loginForm.addEventListener('submit', async function (e) {
             e.preventDefault(); // prevent form refresh
 
+            errorMsg.textContent = '';  // clear previous errors
+
             const username = document.getElementById('username').value.trim();
 
             if (username.length < 3) {
@@ -129,12 +131,13 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    window.location.href = '/dashboard';
+                    window.location.href = '/home';
                 } else {
                     errorMsg.textContent = result.message || "Login failed.";
                 }
             } catch (error) {
                 errorMsg.textContent = "An error occurred while logging in.";
+                console.error(error);
             }
         });
     </script>

@@ -303,30 +303,24 @@ def signup():
 @app.route('/login',methods= ['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        if request.is_json():
+        if request.is_json:
             data = request.get_json()
-            username = data.get('username','').strip()
+            username = data.get('username', '').strip()
 
             if username:
                 session['username'] = username
-                return jsonify({"success" : True})
+                return jsonify({"success": True})
             else:
                 return jsonify({"success": False, "message": "Please enter a username"})
         else:
             username = request.form.get('username', '').strip()
             if username:
-                session['username'] = username 
-                return redirect(url_for('user_home'))
-            else:
-                return render_template('login.html', error="please enter a username")
-
-    try:
-        return render_template('login.html',error=None) 
-    except TemplateNotFound:
-        logger.error("Login template not found")
-        return "Error: Login template not found.", 500
-             
-
+                session['username'] = username
+                return redirect(url_for('home'))
+            else:   
+                return redirect(url_for('login'))
+    return render_template('login.html')
+            
 @app.route('/logout')
 def logout():
     session.pop('username',None)
