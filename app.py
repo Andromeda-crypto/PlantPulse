@@ -1,11 +1,14 @@
 import cv2
 import os
+import csv
+import json
 from flask import Flask, render_template, request, send_from_directory, redirect, url_for, session, jsonify
 import pandas as pd
 import plotly.graph_objects as go
 from jinja2 import TemplateNotFound
 from plotly.subplots import make_subplots
 from werkzeug.utils import secure_filename
+from werkzeug.security import generate_password_hash, check_password_hash
 import numpy as np
 import logging
 from PIL import Image
@@ -17,81 +20,105 @@ logger = logging.getLogger(__name__)
 
 
 app = Flask(__name__, static_folder='static')
-app.secret_key = 'your_secret_key'
+app.secret_key = '_my_project_secret_key_'
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'Uploads')
 CSV_DIR = os.path.join(BASE_DIR, 'csv runs')
 DB_PATH = os.path.join(BASE_DIR, 'plantpulse.db')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+USER_DATA_FOLDER= 'user_data'
+if not os.path.exists(USER_DATA_FOLDER):
+    os.makedirs(USER_DATA_FOLDER)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Create directories
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(CSV_DIR, exist_ok=True)
 
-def load_latest_data():
-    """Load the latest 168 readings from SQLite."""
+def load_latest_data(username=None):
     try:
-        conn = sqlite3.connect(DB_PATH)  
-        df = pd.read_sql('SELECT * FROM readings ORDER BY timestamp DESC LIMIT 168', conn)
-        conn.close()
-        if df.empty:
-            return pd.DataFrame(), "No data in database"
-        return df, None
+        if username:
+            filepath = f"csv runs/{username}_data.csv"
+        else:
+            filepath = "csv runs/latest_data.csv"
+        
+        if not os.path.exists(filepath):
+            return None, f"No data found for {username}."
+        
+        data = pd.read_csv(filepath)
+        return data, None
     except Exception as e:
-        return pd.DataFrame(), f"Database error: {str(e)}"
+        return None, str(e)
+
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @app.route('/home')
 def user_home():
-    if "username" in session:
-        return redirect(url_for('login'))
-    return render_template('home.html')
+    if "username" not in session:
+        return jsonify({"Error" : "User not logged in"}), 401
+    return jsonify({
+        "message": f"Welcome {session['username']}!",
+        "status": "success"
+    })
 
 
 @app.route('/')
 def home():
     if "username" in session:
-        return redirect(url_for('user_home'))
-    return redirect(url_for('login'))
+        return jsonify ({"redirect": "/home"})
+    else:
+        return jsonify({"redirect": "/login"})
+    
+
     
 
 @app.route('/photo', methods=['GET', 'POST'])
 def photo():
     if request.method == 'POST':
         if 'photo' not in request.files:
-            return render_template('photo.html', message="No file part in request")
+            return jsonify({"success": False, "message": "No file part in request"}), 400
+        
         file = request.files['photo']
+        
         if file.filename == '':
-            return render_template('photo.html', message="No file selected")
+            return jsonify({"success": False, "message": "No file selected"}), 400
+        
         if not allowed_file(file.filename):
-            return render_template('photo.html', message="File type not allowed. Please upload .jpg, .png, or .jpeg")
+            return jsonify({"success": False, "message": "File type not allowed. Please upload .jpg, .png, or .jpeg"}), 400
+        
         file.seek(0, os.SEEK_END)
         file_length = file.tell()
         file.seek(0)
         if file_length > 5 * 1024 * 1024:
-            return render_template('photo.html', message="File too large. Maximum size is 5MB")
+            return jsonify({"success": False, "message": "File too large. Maximum size is 5MB"}), 400
+        
         try:
             Image.open(file).verify()
             file.seek(0)
+            
             filename = secure_filename(file.filename)
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(filepath)
+            
             img = cv2.imread(filepath)
             if img is None:
                 os.remove(filepath)
-                return render_template('photo.html', message="Error: Could not read image file.")
+                return jsonify({"success": False, "message": "Error: Could not read image file."}), 400
+            
             img = cv2.resize(img, (512, 512))
             height, width = img.shape[:2]
+            
             if height < 100 or width < 100:
                 os.remove(filepath)
-                return render_template('photo.html', message="Error: Image is too small.")
+                return jsonify({"success": False, "message": "Error: Image is too small."}), 400
+            
             blur = cv2.Laplacian(img, cv2.CV_64F).var()
             if blur < 100:
                 result = "Image is blurry! Please upload a clearer image."
-                return render_template('photo.html', message=f"Image Saved: {filename}", filename=filename, result=result)
+                return jsonify({"success": True, "message": f"Image Saved: {filename}", "filename": filename, "result": result}), 200
+            
             edges = cv2.Canny(img, 100, 200)
             edge_density = np.sum(edges) / 255 / (img.shape[0] * img.shape[1])
             edge_count = np.sum(edges) / 255
@@ -102,16 +129,20 @@ def photo():
             green_percent = np.sum(green_mask) / (img.shape[0] * img.shape[1]) * 100
             color_var = np.std(img)
             avg_color = img.mean(axis=0).mean(axis=0)
+            
             is_soil = edge_count > 5000 and brown_percent > 60 and color_var > 50 and edge_density > 10
             is_plant = green_percent > 60 and edge_density > 5 and color_var < 50
+            
             brightness = img.mean()
             content = "unknown"
+            
             if is_plant and not is_soil:
                 content = 'plant'
             elif is_soil and not is_plant:
                 content = "soil"
             elif is_soil and is_plant and green_percent > 40 and brown_percent > 40:
                 content = "Plant and Soil"
+            
             result = ""
             if content == "unknown":
                 result = "Not soil or plant–upload a soil or plant pic!"
@@ -131,22 +162,23 @@ def photo():
                     result += "–Overwatered?"
                 elif soil_status == "Dry" and plant_status == "Stressed":
                     result += "–Underwatered?"
+            
             elif brightness < 50:
                 result = "Image is too dark!"
             elif brightness > 200:
                 result = "Too bright–reduce brightness."
             else:
                 result = "Balanced"
-            return render_template('photo.html', message=f"Image Saved: {filename}", filename=filename, result=result)
+            
+            return jsonify({"success": True, "message": f"Image Saved: {filename}", "filename": filename, "result": result}), 200
+        
         except Exception as e:
             if os.path.exists(filepath):
                 os.remove(filepath)
-            return render_template('photo.html', message=f"Error processing image: {str(e)}")
-    try:
-        return render_template('photo.html', message=None)
-    except TemplateNotFound:
-        logger.error("Photo template not found")
-        return "Error: Photo template not found.", 500
+            return jsonify({"success": False, "message": f"Error processing image: {str(e)}"}), 500
+    
+    # For GET requests, just return a simple JSON message or status
+    return jsonify({"message": "Please POST an image file to this endpoint"}), 200
 
 @app.route('/Uploads/<filename>')
 def serve_upload(filename):
@@ -158,40 +190,51 @@ def serve_upload(filename):
 
 @app.route('/query', methods=['GET', 'POST'])
 def query():
-    Data, load_error = load_latest_data()
+    if "username" not in session:
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+    
+    username = session["username"]
+    Data, load_error = load_latest_data(username)
+    
     if load_error:
-        return render_template('query.html', error=load_error)
+        return jsonify({"success": False, "error": load_error}), 500
+    
     if request.method == 'POST':
         try:
             hour = int(request.form['hour'])
             if 0 <= hour < len(Data):
                 row = Data.iloc[hour]
-                result = (
-                    f"Hour {hour}:<br>"
-                    f"Soil Moisture: {row['soil_moisture']:.2f}%<br>"
-                    f"Light Level: {row['light_level']:.2f} lux<br>"
-                    f"Temperature: {row['temperature']:.2f}°C<br>"
-                    f"Health: {row['health_status']}"
-                )
+                result = {
+                    "hour": hour,
+                    "soil_moisture": round(row['soil_moisture'], 2),
+                    "light_level": round(row['light_level'], 2),
+                    "temperature": round(row['temperature'], 2),
+                    "health_status": row['health_status']
+                }
+                return jsonify({"success": True, "result": result}), 200
             else:
-                result = f"Error: Hour must be between 0 and {len(Data)-1}!"
+                return jsonify({"success": False, "error": f"Hour must be between 0 and {len(Data)-1}"}), 400
         except ValueError:
-            result = "Error: Hour must be a number!"
-        return render_template('query.html', result=result)
-    try:
-        return render_template('query.html', result=None)
-    except TemplateNotFound:
-        logger.error("Query template not found")
-        return "Error: Query template not found.", 500
+            return jsonify({"success": False, "error": "Hour must be a number!"}), 400
+    
+    return jsonify({"message": "Please POST an 'hour' parameter to query data."}), 200
 
+
+# Route for zooming in on data using graphs
 @app.route('/zoom', methods=['GET', 'POST'])
 def zoom():
-    Data, load_error = load_latest_data()
+    if "username" not in session:
+        return render_template('zoom.html', error="Unauthorized: Please log in to view your data.")
+    
+    username = session["username"]
+    Data, load_error = load_latest_data(username)
+    
     if Data.empty:
-        logger.warning("Zoom route: No data available")
+        logger.warning(f"Zoom route: No data available for user {username}")
         return render_template('zoom.html', error=f"Error: No data available - {load_error}")
+    
     if request.method == 'POST':
-        logger.info(f"Received form data: {request.form}")
+        logger.info(f"Received form data from {username}: {request.form}")
         try:
             start_hour_str = request.form.get('start_hour', '').strip()
             end_hour_str = request.form.get('end_hour', '').strip()
@@ -200,11 +243,15 @@ def zoom():
             start_hour = int(start_hour_str)
             end_hour = int(end_hour_str)
             logger.info(f"Parsed start_hour: {start_hour}, end_hour: {end_hour}")
+            
             if not (0 <= start_hour < len(Data) and 0 <= end_hour < len(Data)):
                 return render_template('zoom.html', error=f"Hours must be between 0 and {len(Data)-1}!")
             if start_hour > end_hour:
                 return render_template('zoom.html', error="Start hour must be less than or equal to end hour!")
+            
             zoomed_data = Data.iloc[start_hour:end_hour + 1]
+            
+            # (Keep your plotting code exactly the same)
             fig = make_subplots(rows=3, cols=1, subplot_titles=('Soil Moisture', 'Light Level', 'Temperature'))
             fig.add_trace(go.Scatter(x=zoomed_data['timestamp'], y=zoomed_data['soil_moisture'],
                                     mode='lines', name='Soil Moisture', line=dict(color='blue')), row=1, col=1)
@@ -229,41 +276,52 @@ def zoom():
             fig.update_yaxes(title_text="Light (lux)", row=2, col=1)
             fig.update_yaxes(title_text="Temperature (°C)", row=3, col=1)
             plot_html = fig.to_html(full_html=False)
+            
             return render_template('zoom.html', plot_html=plot_html, error=None)
         except ValueError as e:
-            logger.error(f"ValueError in zoom route: {str(e)}, Form data: {request.form}")
+            logger.error(f"ValueError in zoom route for {username}: {str(e)}, Form data: {request.form}")
             return render_template('zoom.html', error=f"Invalid input: {str(e)}")
         except KeyError as e:
-            logger.error(f"KeyError in zoom route: {str(e)}, Form data: {request.form}")
+            logger.error(f"KeyError in zoom route for {username}: {str(e)}, Form data: {request.form}")
             return render_template('zoom.html', error=f"Form error: Missing field {str(e)}")
         except Exception as e:
-            logger.error(f"Unexpected error in zoom route: {str(e)}, Form data: {request.form}")
+            logger.error(f"Unexpected error in zoom route for {username}: {str(e)}, Form data: {request.form}")
             return render_template('zoom.html', error=f"Error generating plot: {str(e)}")
+    
     try:
         return render_template('zoom.html', plot_html=None, error=None)
     except TemplateNotFound:
         logger.error("Zoom template not found")
         return "Error: Zoom template not found.", 500
 
+# personalized dashboard 
 @app.route('/dashboard')
 def dashboard():
     username = session.get('username')
     if not username:
         return redirect(url_for("login"))
+    
     user_data_file = f"data/{username}.csv"
+    
     if os.path.exists(user_data_file):
         Data = pd.read_csv(user_data_file)
     else:
         Data, error = load_latest_data()
-        if error:
-            return render_template('dashboard.html',error=error,username=username,stats=None,moisture_chart=None, light_chart=None,
-                                  temperature_chart=None, health_chart=None)
-        
+        if error or Data.empty:
+            return render_template('dashboard.html',
+                                   error=error or "No data available",
+                                   username=username,
+                                   stats=None,
+                                   moisture_chart=None,
+                                   light_chart=None,
+                                   temperature_chart=None,
+                                   health_chart=None,
+                                   alerts=None)
+    
     stats = {
-        "average_moisture": round(Data['soil_moisture'].mean(),2),
-        "average_light": round(Data['light_level'].mean(),2),
-        "average_temperature": round(Data['temperature'].mean(),2),
-
+        "average_moisture": round(Data['soil_moisture'].mean(), 2),
+        "average_light": round(Data['light_level'].mean(), 2),
+        "average_temperature": round(Data['temperature'].mean(), 2),
     }
 
     moisture_chart = create_moisture_chart(Data)
@@ -272,54 +330,87 @@ def dashboard():
     health_chart = create_health_chart(Data)
     alerts = generate_alerts(Data)
     
-    return render_template('dashboard.html',username=username,stats=stats,mositure_chart=moisture_chart, light_chart=light_chart,temperature_chart=temperature_chart,
-                           health_chart=health_chart,alerts=alerts)
+    return render_template('dashboard.html',
+                           username=username,
+                           stats=stats,
+                           moisture_chart=moisture_chart,  # fixed typo here
+                           light_chart=light_chart,
+                           temperature_chart=temperature_chart,
+                           health_chart=health_chart,
+                           alerts=alerts)
 
 
-@app.route('/signup',methods=["GET", "POST"])
+USERS_FILE = 'users.json'
+def load_users():
+    if os.path.exists(USERS_FILE):
+        with open(USERS_FILE,'r') as f:
+            return json.load(f)
+    return {}
+
+def save_users(users):
+    with open(USERS_FILE,'w') as f:
+        json.dump(users,f)
+
+
+@app.route('/signup', methods=["GET", "POST"])
 def signup():
     error = None
     if request.method == "POST":
-        username = request.form.get("username","").strip()
+        username = request.form.get("username", "").strip()
         email = request.form.get('email', '').strip()
-        password = request.form.get("password","").strip()
-        confirm_password = request.form.get("confirm_password","").strip()
+        password = request.form.get("password", "").strip()
+        confirm_password = request.form.get("confirm_password", "").strip()
 
-        if not username :
+        if not username:
             error = "Username is required\nPlease enter a username"
         elif not email:
             error = "Email is required\nPlease enter an email"
-        elif not password:  
+        elif not password:
             error = "Password is required\nPlease enter a password"
         elif confirm_password != password:
             error = "Passwords do not match\nPlease confirm your password"
         else:
-            # TODO : Add logic to save user data to database
-            session['username'] = username
-            return redirect(url_for('user_home'))
+            users = load_users()
+            if username in users:
+                error = "Username already exists"
+            else:
+                hashed_password = generate_password_hash(password)
+                users[username] = {"email": email, "password": hashed_password}
+                save_users(users)
+                
+                #empty CSV file for user data
+                user_csv_path = os.path.join(USER_DATA_FOLDER, f"{username}.csv")
+                if not os.path.exists(user_csv_path):
+                    import pandas as pd
+                    df = pd.DataFrame(columns=["timestamp", "soil_moisture", "light_level", "temperature", "health_status"])
+                    df.to_csv(user_csv_path, index=False)
+                
+                session['username'] = username
+                return redirect(url_for('dashboard'))  
+
     return render_template('signup.html', error=error)
 
 
-@app.route('/login',methods= ['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        if request.is_json:
-            data = request.get_json()
-            username = data.get('username', '').strip()
 
-            if username:
-                session['username'] = username
-                return jsonify({"success": True})
-            else:
-                return jsonify({"success": False, "message": "Please enter a username"})
+@app.route('/login', methods=["GET", "POST"])
+def login():
+    error = None
+    if request.method == "POST":
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "").strip()
+
+        users = load_users()
+        user = users.get(username)
+        if not user:
+            error = "Invalid username or password"
+        elif not check_password_hash(user['password'], password):
+            error = "Invalid username or password"
         else:
-            username = request.form.get('username', '').strip()
-            if username:
-                session['username'] = username
-                return redirect(url_for('home'))
-            else:   
-                return redirect(url_for('login'))
-    return render_template('login.html')
+            session['username'] = username
+            return redirect(url_for('user_home'))  
+
+    return render_template('login.html', error=error)
+
             
 @app.route('/logout')
 def logout():
