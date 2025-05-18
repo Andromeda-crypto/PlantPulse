@@ -251,7 +251,7 @@ def zoom():
             
             zoomed_data = Data.iloc[start_hour:end_hour + 1]
             
-            # (Keep your plotting code exactly the same)
+            
             fig = make_subplots(rows=3, cols=1, subplot_titles=('Soil Moisture', 'Light Level', 'Temperature'))
             fig.add_trace(go.Scatter(x=zoomed_data['timestamp'], y=zoomed_data['soil_moisture'],
                                     mode='lines', name='Soil Moisture', line=dict(color='blue')), row=1, col=1)
