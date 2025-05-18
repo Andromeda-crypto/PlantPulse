@@ -96,6 +96,9 @@
             <label for="username">Username</label>
             <input type="text" id="username" name="username" placeholder="Enter username" required />
 
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" placeholder="Enter password" required />
+
             <button type="submit">Login</button>
         </form>
         <div class="link">
@@ -108,32 +111,38 @@
         const errorMsg = document.getElementById('errorMsg');
 
         loginForm.addEventListener('submit', async function (e) {
-            e.preventDefault(); // prevent form refresh
+            e.preventDefault();
 
-            errorMsg.textContent = '';  // clear previous errors
+            errorMsg.textContent = '';
 
             const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
 
             if (username.length < 3) {
                 errorMsg.textContent = "Username must be at least 3 characters.";
                 return;
             }
 
+            if (!password) {
+                errorMsg.textContent = "Please enter a password.";
+                return;
+            }
+
             try {
                 const response = await fetch('/login', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ username })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
                 });
 
                 const result = await response.json();
 
-                if (result.success) {
+                if (result.message === "Login successful") {
                     window.location.href = '/home';
+                } else if (result.error) {
+                    errorMsg.textContent = result.error;
                 } else {
-                    errorMsg.textContent = result.message || "Login failed.";
+                    errorMsg.textContent = "Login failed.";
                 }
             } catch (error) {
                 errorMsg.textContent = "An error occurred while logging in.";
@@ -143,3 +152,4 @@
     </script>
 </body>
 </html>
+
