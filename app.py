@@ -1,6 +1,6 @@
 import cv2
 import os
-from flask import Flask, render_template, request, send_from_directory, redirect, url_for, session
+from flask import Flask, render_template, request, send_from_directory, redirect, url_for, session, jsonify
 import pandas as pd
 import plotly.graph_objects as go
 from jinja2 import TemplateNotFound
@@ -296,20 +296,36 @@ def signup():
         else:
             # TODO : Add logic to save user data to database
             session['username'] = username
-            return redirect(url_for('home'))
+            return redirect(url_for('user_home'))
     return render_template('signup.html', error=error)
 
 
 @app.route('/login',methods= ['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username  = request.form.get('username').strip()
-        if username:
-            session['username'] = username
-            return redirect(url_for('user_home'))
+        if request.is_json():
+            data = request.get_json()
+            username = data.get('username','').strip()
+
+            if username:
+                session['username'] = username
+                return jsonify({"success" : True})
+            else:
+                return jsonify({"success": False, "message": "Please enter a username"})
         else:
-            return render_template('login.html', error='Please enter a username')
-    return render_template('login.html')
+            username = request.form.get('username', '').strip()
+            if username:
+                session['username'] = username 
+                return redirect(url_for('user_home'))
+            else:
+                return render_template('login.html', error="please enter a username")
+
+    try:
+        return render_template('login.html',error=None) 
+    except TemplateNotFound:
+        logger.error("Login template not found")
+        return "Error: Login template not found.", 500
+             
 
 @app.route('/logout')
 def logout():

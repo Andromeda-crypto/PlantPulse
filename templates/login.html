@@ -84,14 +84,15 @@
             color: #ffbaba;
             font-size: 0.9rem;
             text-align: center;
+            margin-bottom: 10px;
         }
     </style>
 </head>
 <body>
     <div class="form-container">
         <h2>Login</h2>
-        <div class="error" id="errorMsg">{{ error if error }}</div>
-        <form id="loginForm" method="POST" action="/login">
+        <div class="error" id="errorMsg"></div>
+        <form id="loginForm">
             <label for="username">Username</label>
             <input type="text" id="username" name="username" placeholder="Enter username" required />
 
@@ -106,16 +107,36 @@
         const loginForm = document.getElementById('loginForm');
         const errorMsg = document.getElementById('errorMsg');
 
-        loginForm.addEventListener('submit', function (e) {
-            const username = loginForm.username.value.trim();
+        loginForm.addEventListener('submit', async function (e) {
+            e.preventDefault(); // prevent form refresh
+
+            const username = document.getElementById('username').value.trim();
 
             if (username.length < 3) {
-                e.preventDefault();
                 errorMsg.textContent = "Username must be at least 3 characters.";
+                return;
+            }
+
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    window.location.href = '/dashboard';
+                } else {
+                    errorMsg.textContent = result.message || "Login failed.";
+                }
+            } catch (error) {
+                errorMsg.textContent = "An error occurred while logging in.";
             }
         });
     </script>
 </body>
 </html>
-
-
