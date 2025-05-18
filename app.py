@@ -1,6 +1,7 @@
 import cv2
 import os
 import csv
+import re
 import json
 from flask import Flask, render_template, request, send_from_directory, redirect, url_for, session, jsonify
 import pandas as pd
@@ -26,10 +27,7 @@ UPLOAD_FOLDER = os.path.join(BASE_DIR, 'Uploads')
 CSV_DIR = os.path.join(BASE_DIR, 'csv runs')
 DB_PATH = os.path.join(BASE_DIR, 'plantpulse.db')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
-USER_DATA_FOLDER= 'user_data'
-if not os.path.exists(USER_DATA_FOLDER):
-    os.makedirs(USER_DATA_FOLDER)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
 
 # Create directories
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -343,18 +341,29 @@ def dashboard():
                            health_chart=health_chart,
                            alerts=alerts)
 
+USER_DATA_FOLDER = 'user_data'
+if not os.path.exists(USER_DATA_FOLDER):
+    os.makedirs(USER_DATA_FOLDER)
 
-USERS_FILE = 'users.json'
+USERS_FILE = os.path.join(USER_DATA_FOLDER, 'users.json')
+
 def load_users():
     if os.path.exists(USERS_FILE):
-        with open(USERS_FILE,'r') as f:
-            return json.load(f)
+        try:
+            with open(USERS_FILE, 'r') as f:
+                return json.load(f)
+        except (json.JSONDecodeError, IOError):
+            # Could log this error in real app
+            return {}
     return {}
 
 def save_users(users):
-    with open(USERS_FILE,'w') as f:
-        json.dump(users,f)
-
+    try:
+        with open(USERS_FILE, 'w') as f:
+            json.dump(users, f, indent=4)
+    except IOError:
+        # Could log or raise in real app
+        pass
 
 @app.route('/signup', methods=["POST"])
 def signup():
@@ -364,27 +373,39 @@ def signup():
     password = data.get("password", "").strip()
     confirm_password = data.get("confirm_password", "").strip()
 
+  
     if not username:
-        return jsonify({"success": False, "message": "Username is required"}), 400
-    elif not email:
-        return jsonify({"success": False, "message": "Email is required"}), 400
-    elif not password:
-        return jsonify({"success": False, "message": "Password is required"}), 400
-    elif confirm_password != password:
-        return jsonify({"success": False, "message": "Passwords do not match"}), 400
+        return jsonify({"error": "Username is required"}), 400
+    if len(username) < 3:
+        return jsonify({"error": "Username must be at least 3 characters"}), 400
+
+    if not email:
+        return jsonify({"error": "Email is required"}), 400
+   
+    if not re.match(r"^[^\s@]+@[^\s@]+\.[^\s@]+$", email):
+        return jsonify({"error": "Invalid email format"}), 400
+
+    if not password:
+        return jsonify({"error": "Password is required"}), 400
+    if len(password) < 6:
+        return jsonify({"error": "Password must be at least 6 characters"}), 400
+
+    if password != confirm_password:
+        return jsonify({"error": "Passwords do not match"}), 400
 
     users = load_users()
     if username in users:
-        return jsonify({"success": False, "message": "Username already exists"}), 409
+        return jsonify({"error": "Username already exists"}), 409
 
     hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
     users[username] = {"email": email, "password": hashed_password}
     save_users(users)
 
-    # create empty CSV file for user data as before
+    # Create empty CSV file for user data (if your app requires it)
+    # e.g., create_user_csv(username)
 
     session['username'] = username
-    return jsonify({"success": True, "message": "Signup successful", "username": username}), 201
+    return jsonify({"message": "Signup successful", "username": username}), 201
 
 
 
