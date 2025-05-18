@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -41,65 +40,106 @@
         .container {
             max-width: 1200px;
         }
+        label {
+            margin-right: 10px;
+        }
+        input[type=number] {
+            width: 100px;
+            margin-right: 20px;
+            display: inline-block;
+        }
     </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg fixed-top">
         <div class="container">
             <a class="navbar-brand" href="/">PlantPulse</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/dashboard">Dashboard</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/query">Query</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="/zoom">Zoom</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/photo">Photo</a>
-                    </li>
+                    <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/dashboard">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/query">Query</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/zoom">Zoom</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/photo">Photo</a></li>
                 </ul>
             </div>
         </div>
     </nav>
+
     <div class="container mt-4">
         <h1 class="text-center mb-4" style="color: #2e7d32;">Zoom Plant Data</h1>
-        {% if error %}
-        <div class="alert alert-danger">{{ error }}</div>
-        {% endif %}
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title">Select Time Range</h5>
-                <form method="POST" action="/zoom">
-                    <div class="mb-3">
-                        <label for="start_hour" class="form-label">Start Hour:</label>
-                        <input type="number" class="form-control" id="start_hour" name="start_hour" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="end_hour" class="form-label">End Hour:</label>
-                        <input type="number" class="form-control" id="end_hour" name="end_hour" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Zoom</button>
-                </form>
+                <div>
+                    <label for="start_hour">Start Hour:</label>
+                    <input type="number" id="start_hour" name="start_hour" min="0">
+
+                    <label for="end_hour">End Hour:</label>
+                    <input type="number" id="end_hour" name="end_hour" min="0">
+
+                    <button class="btn btn-primary" onclick="submitZoom()">Zoom</button>
+                </div>
+
+                <div id="zoom-error" style="color: red; margin-top: 10px;"></div>
+                <div id="plot-container" style="margin-top: 20px;"></div>
+
+                <script>
+                    function submitZoom() {
+                        const startHour = document.getElementById('start_hour').value.trim();
+                        const endHour = document.getElementById('end_hour').value.trim();
+                        const errorDiv = document.getElementById('zoom-error');
+                        const plotContainer = document.getElementById('plot-container');
+
+                        // Clear previous errors and plot
+                        errorDiv.textContent = '';
+                        plotContainer.innerHTML = '';
+
+                        if (startHour === '' || endHour === '') {
+                            errorDiv.textContent = 'Please enter both start and end hours.';
+                            return;
+                        }
+
+                        if (isNaN(startHour) || isNaN(endHour)) {
+                            errorDiv.textContent = 'Please enter valid numbers.';
+                            return;
+                        }
+
+                        if (parseInt(startHour) > parseInt(endHour)) {
+                            errorDiv.textContent = 'Start hour must be less than or equal to end hour!';
+                            return;
+                        }
+
+                        fetch('/zoom', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                start_hour: startHour,
+                                end_hour: endHour
+                            })
+                        })
+                        .then(response => response.json().then(data => ({ status: response.status, body: data })))
+                        .then(({ status, body }) => {
+                            if (status === 200) {
+                                plotContainer.innerHTML = body.plot_html;
+                            } else {
+                                errorDiv.textContent = body.error || 'An error occurred';
+                            }
+                        })
+                        .catch(err => {
+                            errorDiv.textContent = 'Network error or server not responding';
+                            console.error(err);
+                        });
+                    }
+                </script>
             </div>
         </div>
-        {% if plot_html %}
-        <div class="card mt-4">
-            <div class="card-body">
-                <h5 class="card-title">Zoomed Data</h5>
-                {{ plot_html | safe }}
-            </div>
-        </div>
-        {% endif %}
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
