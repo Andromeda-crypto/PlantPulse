@@ -67,9 +67,9 @@ def user_home():
 @app.route('/')
 def home():
     if "username" in session:
-        return jsonify ({"redirect": "/home"})
+        return redirect(url_for('user_home'))
     else:
-        return jsonify({"redirect": "/login"})
+        return redirect(url_for('login'))
     
 
     
