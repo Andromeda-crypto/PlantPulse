@@ -1,42 +1,151 @@
-import React from 'react';
-import { motion } from "framer-motion";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-export default function Home() {
-    return ( 
-        <main className="min-h screen bg-gradient-to-br from green-50 via emerald-100 to blue-100 flex items-center justify-center p-6">
-            <motion.div
-                initial = {{opacity: 0, y: 50}}
-                animate = {{opacity: 1, y:0}}
-                transition = {{duration: 0.8}}
-                className="bg-white rounded-3xl shadow-2xl p-10 max-w-5xl w-full grig grid-cols-1 md:grid-cols-2 gap-10"
+export default function LoginSignup() {
+  const navigate = useNavigate();
+
+  // Toggle between login and signup view
+  const [isLogin, setIsLogin] = useState(true);
+
+  // Shared form fields
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState(''); // for signup only
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState(''); // for signup only
+
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+
+    const url = isLogin ? '/login' : '/signup';
+    const payload = isLogin
+      ? { username, password }
+      : { username, email, password, confirm_password: confirmPassword };
+
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success !== false) {
+        // Redirect to /home on success
+        navigate('/home');
+      } else {
+        setError(data.message || data.error || 'Something went wrong');
+      }
+    } catch (err) {
+      setError('Network error: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-lg">
+      <h2 className="text-2xl font-bold mb-4">
+        {isLogin ? 'Login to PlantPulse' : 'Create a PlantPulse Account'}
+      </h2>
+
+      {error && (
+        <div className="mb-4 p-2 bg-red-200 text-red-800 rounded">{error}</div>
+      )}
+
+      <form onSubmit={handleSubmit}>
+        <div className="mb-4">
+          <label className="block mb-1 font-semibold">Username</label>
+          <input
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+            className="w-full px-3 py-2 border rounded"
+          />
+        </div>
+
+        {!isLogin && (
+          <div className="mb-4">
+            <label className="block mb-1 font-semibold">Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required={!isLogin}
+              className="w-full px-3 py-2 border rounded"
+            />
+          </div>
+        )}
+
+        <div className="mb-4">
+          <label className="block mb-1 font-semibold">Password</label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className="w-full px-3 py-2 border rounded"
+          />
+        </div>
+
+        {!isLogin && (
+          <div className="mb-4">
+            <label className="block mb-1 font-semibold">Confirm Password</label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required={!isLogin}
+              className="w-full px-3 py-2 border rounded"
+            />
+          </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition"
         >
-                <div className="space-y-6">
-                    <h1 className="text-5xl font-extrabold text-emrald-700 leadong-tight">
-                        Welcome to <span className="text-blue-600">PlantPulse</span>
-                    </h1>
-                    <p className="text-gray-700 text-lg">
-                        Your all in one smart monitoring solution for plant health. Stay ahead of water needs, light exposure and temperature changes.
-                    </p>
-                    <a className="inline-block px-6 py-3 rounded-xl bg-to-r from emerald-500 to blue-500 text-white text-lg font-semibold shadow-lg hover:scale-105 transform transition duration-300 shadow-md"
-                    >
-                        Get Started
-                    </a>
-                </div>
-                 
-            <motion.div 
-                 initial = {{opacity:0, scale:0.9}}
-                 animate = {{opacity:1, scale:1}}
-                 transition = {{delay:0.2, duratioin: 0.8}}
-                 className="flex justify-center items-center"
-                 >
-                <img 
-                    src="https://www.istockphoto.com/illustrations/green-plant-logo"
-                    alt = "Plant Illustration"
-                    className="w-full max-w-sm"
-                    />
-                </motion.div>
-            </motion.div>
-        </main>
+          {loading ? (isLogin ? 'Logging in...' : 'Signing up...') : (isLogin ? 'Login' : 'Sign Up')}
+        </button>
+      </form>
 
-    )
+      <p className="mt-4 text-center">
+        {isLogin ? (
+          <>
+            Don't have an account?{' '}
+            <button
+              className="text-green-600 font-semibold hover:underline"
+              onClick={() => {
+                setError(null);
+                setIsLogin(false);
+              }}
+            >
+              Sign up here
+            </button>
+          </>
+        ) : (
+          <>
+            Already have an account?{' '}
+            <button
+              className="text-green-600 font-semibold hover:underline"
+              onClick={() => {
+                setError(null);
+                setIsLogin(true);
+              }}
+            >
+              Login here
+            </button>
+          </>
+        )}
+      </p>
+    </div>
+  );
 }

@@ -244,14 +244,16 @@ def zoom():
             end_hour = int(end_hour_str)
             logger.info(f"Parsed start_hour: {start_hour}, end_hour: {end_hour}")
             
-            if not (0 <= start_hour < len(Data) and 0 <= end_hour < len(Data)):
-                return render_template('zoom.html', error=f"Hours must be between 0 and {len(Data)-1}!")
+            if not (0 <= start_hour < len(Data)) or not (0 <= end_hour < len(Data)):
+                return render_template('zoom.html', error=f"Choose values between 0 and {len(Data)-1}.")
             if start_hour > end_hour:
                 return render_template('zoom.html', error="Start hour must be less than or equal to end hour!")
             
             zoomed_data = Data.iloc[start_hour:end_hour + 1]
+            if zoomed_data.empty:
+                return render_template('zoom.html', error="No data found in the selected time range.")
             
-            
+            # Plotting section remains unchanged
             fig = make_subplots(rows=3, cols=1, subplot_titles=('Soil Moisture', 'Light Level', 'Temperature'))
             fig.add_trace(go.Scatter(x=zoomed_data['timestamp'], y=zoomed_data['soil_moisture'],
                                     mode='lines', name='Soil Moisture', line=dict(color='blue')), row=1, col=1)
@@ -278,6 +280,7 @@ def zoom():
             plot_html = fig.to_html(full_html=False)
             
             return render_template('zoom.html', plot_html=plot_html, error=None)
+        
         except ValueError as e:
             logger.error(f"ValueError in zoom route for {username}: {str(e)}, Form data: {request.form}")
             return render_template('zoom.html', error=f"Invalid input: {str(e)}")
@@ -293,6 +296,7 @@ def zoom():
     except TemplateNotFound:
         logger.error("Zoom template not found")
         return "Error: Zoom template not found.", 500
+
 
 # personalized dashboard 
 @app.route('/dashboard')
@@ -352,70 +356,63 @@ def save_users(users):
         json.dump(users,f)
 
 
-@app.route('/signup', methods=["GET", "POST"])
+@app.route('/signup', methods=["POST"])
 def signup():
-    error = None
-    if request.method == "POST":
-        username = request.form.get("username", "").strip()
-        email = request.form.get('email', '').strip()
-        password = request.form.get("password", "").strip()
-        confirm_password = request.form.get("confirm_password", "").strip()
+    data = request.get_json()
+    username = data.get("username", "").strip()
+    email = data.get("email", "").strip()
+    password = data.get("password", "").strip()
+    confirm_password = data.get("confirm_password", "").strip()
 
-        if not username:
-            error = "Username is required\nPlease enter a username"
-        elif not email:
-            error = "Email is required\nPlease enter an email"
-        elif not password:
-            error = "Password is required\nPlease enter a password"
-        elif confirm_password != password:
-            error = "Passwords do not match\nPlease confirm your password"
-        else:
-            users = load_users()
-            if username in users:
-                error = "Username already exists"
-            else:
-                hashed_password = generate_password_hash(password,method='pbkdf2:sha256')
-                users[username] = {"email": email, "password": hashed_password}
-                save_users(users)
-                
-                #empty CSV file for user data
-                user_csv_path = os.path.join(USER_DATA_FOLDER, f"{username}.csv")
-                if not os.path.exists(user_csv_path):
-                    import pandas as pd
-                    df = pd.DataFrame(columns=["timestamp", "soil_moisture", "light_level", "temperature", "health_status"])
-                    df.to_csv(user_csv_path, index=False)
-                
-                session['username'] = username
-                return redirect(url_for('dashboard'))  
+    if not username:
+        return jsonify({"success": False, "message": "Username is required"}), 400
+    elif not email:
+        return jsonify({"success": False, "message": "Email is required"}), 400
+    elif not password:
+        return jsonify({"success": False, "message": "Password is required"}), 400
+    elif confirm_password != password:
+        return jsonify({"success": False, "message": "Passwords do not match"}), 400
 
-    return render_template('signup.html', error=error)
+    users = load_users()
+    if username in users:
+        return jsonify({"success": False, "message": "Username already exists"}), 409
+
+    hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
+    users[username] = {"email": email, "password": hashed_password}
+    save_users(users)
+
+    # create empty CSV file for user data as before
+
+    session['username'] = username
+    return jsonify({"success": True, "message": "Signup successful", "username": username}), 201
 
 
 
-@app.route('/login', methods=["GET", "POST"])
+@app.route('/login', methods=["POST"])
 def login():
-    error = None
-    if request.method == "POST":
-        username = request.form.get("username", "").strip()
-        password = request.form.get("password", "").strip()
+    if not request.is_json:
+        return jsonify({'error': 'Request must be JSON'}), 400
 
-        users = load_users()
-        user = users.get(username)
-        if not user:
-            error = "Invalid username or password"
-        elif not check_password_hash(user['password'], password):
-            error = "Invalid username or password"
-        else:
-            session['username'] = username
-            return redirect(url_for('user_home'))  
+    data = request.get_json()
+    username = data.get("username", "").strip()
+    password = data.get("password", "").strip()
 
-    return render_template('login.html', error=error)
+    users = load_users()
+    user = users.get(username)
+
+    if not user or not check_password_hash(user['password'], password):
+        return jsonify({'error': 'Invalid username or password'}), 401
+
+    session['username'] = username
+    return jsonify({'message': 'Login successful', 'username': username}), 200
+
 
             
-@app.route('/logout')
+@app.route('/logout', methods=["POST"])
 def logout():
-    session.pop('username',None)
-    return redirect(url_for('login'))
+    session.pop('username', None)
+    return jsonify({'message': 'Logout successful'}), 200
+
 
     
 
