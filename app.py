@@ -214,7 +214,7 @@ def query():
     return jsonify({"message": "Please POST an 'hour' parameter to query data."}), 200
 
 
-@app.route('/zoom', methods=['POST'])
+@app.route('/zoom', methods=['GET', 'POST'])
 def zoom():
     if "username" not in session:
         return jsonify({"error": "Unauthorized: Please log in to view your data."}), 401
