@@ -64,11 +64,7 @@ def user_home():
 
 @app.route('/')
 def home():
-    if "username" in session:
-        return redirect(url_for('user_home'))
-    else:
-        return redirect(url_for('login'))
-    
+    return render_template('index.html')
 
     
 
@@ -218,82 +214,76 @@ def query():
     return jsonify({"message": "Please POST an 'hour' parameter to query data."}), 200
 
 
-# Route for zooming in on data using graphs
-@app.route('/zoom', methods=['GET', 'POST'])
+@app.route('/zoom', methods=['POST'])
 def zoom():
     if "username" not in session:
-        return render_template('zoom.html', error="Unauthorized: Please log in to view your data.")
+        return jsonify({"error": "Unauthorized: Please log in to view your data."}), 401
     
     username = session["username"]
     Data, load_error = load_latest_data(username)
-    
+
     if Data.empty:
         logger.warning(f"Zoom route: No data available for user {username}")
-        return render_template('zoom.html', error=f"Error: No data available - {load_error}")
-    
-    if request.method == 'POST':
-        logger.info(f"Received form data from {username}: {request.form}")
-        try:
-            start_hour_str = request.form.get('start_hour', '').strip()
-            end_hour_str = request.form.get('end_hour', '').strip()
-            if not start_hour_str or not end_hour_str:
-                raise ValueError("Start hour or end hour is missing or empty")
-            start_hour = int(start_hour_str)
-            end_hour = int(end_hour_str)
-            logger.info(f"Parsed start_hour: {start_hour}, end_hour: {end_hour}")
-            
-            if not (0 <= start_hour < len(Data)) or not (0 <= end_hour < len(Data)):
-                return render_template('zoom.html', error=f"Choose values between 0 and {len(Data)-1}.")
-            if start_hour > end_hour:
-                return render_template('zoom.html', error="Start hour must be less than or equal to end hour!")
-            
-            zoomed_data = Data.iloc[start_hour:end_hour + 1]
-            if zoomed_data.empty:
-                return render_template('zoom.html', error="No data found in the selected time range.")
-            
-            # Plotting section remains unchanged
-            fig = make_subplots(rows=3, cols=1, subplot_titles=('Soil Moisture', 'Light Level', 'Temperature'))
-            fig.add_trace(go.Scatter(x=zoomed_data['timestamp'], y=zoomed_data['soil_moisture'],
-                                    mode='lines', name='Soil Moisture', line=dict(color='blue')), row=1, col=1)
-            low_moisture = zoomed_data[zoomed_data['health_status'] == 'Low moisture Plant needs more water']
-            fig.add_trace(go.Scatter(x=low_moisture['timestamp'], y=low_moisture['soil_moisture'],
-                                    mode='markers', name='Low Moisture', marker=dict(color='red', size=10)), row=1, col=1)
-            fig.add_trace(go.Scatter(x=zoomed_data['timestamp'], y=zoomed_data['light_level'],
-                                    mode='lines', name='Light Level', line=dict(color='orange')), row=2, col=1)
-            low_light = zoomed_data[zoomed_data['health_status'] == 'Low light Plant needs more light']
-            fig.add_trace(go.Scatter(x=low_light['timestamp'], y=low_light['light_level'],
-                                    mode='markers', name='Low Light', marker=dict(color='yellow', size=10)), row=2, col=1)
-            fig.add_trace(go.Scatter(x=zoomed_data['timestamp'], y=zoomed_data['temperature'],
-                                    mode='lines', name='Temperature', line=dict(color='red')), row=3, col=1)
-            too_hot = zoomed_data[zoomed_data['health_status'] == 'Too Hot Plant should be exposed to less heat']
-            fig.add_trace(go.Scatter(x=too_hot['timestamp'], y=too_hot['temperature'],
-                                    mode='markers', name='Too Hot', marker=dict(color='purple', size=10)), row=3, col=1)
-            fig.update_layout(height=600, width=800, title_text="Zoomed Plant Data")
-            fig.update_xaxes(title_text="Time", row=1, col=1)
-            fig.update_xaxes(title_text="Time", row=2, col=1)
-            fig.update_xaxes(title_text="Time", row=3, col=1)
-            fig.update_yaxes(title_text="Moisture (%)", row=1, col=1)
-            fig.update_yaxes(title_text="Light (lux)", row=2, col=1)
-            fig.update_yaxes(title_text="Temperature (°C)", row=3, col=1)
-            plot_html = fig.to_html(full_html=False)
-            
-            return render_template('zoom.html', plot_html=plot_html, error=None)
-        
-        except ValueError as e:
-            logger.error(f"ValueError in zoom route for {username}: {str(e)}, Form data: {request.form}")
-            return render_template('zoom.html', error=f"Invalid input: {str(e)}")
-        except KeyError as e:
-            logger.error(f"KeyError in zoom route for {username}: {str(e)}, Form data: {request.form}")
-            return render_template('zoom.html', error=f"Form error: Missing field {str(e)}")
-        except Exception as e:
-            logger.error(f"Unexpected error in zoom route for {username}: {str(e)}, Form data: {request.form}")
-            return render_template('zoom.html', error=f"Error generating plot: {str(e)}")
-    
+        return jsonify({"error": f"No data available - {load_error}"}), 404
+
+    logger.info(f"Received form data from {username}: {request.json}")
     try:
-        return render_template('zoom.html', plot_html=None, error=None)
-    except TemplateNotFound:
-        logger.error("Zoom template not found")
-        return "Error: Zoom template not found.", 500
+        start_hour = int(request.json.get('start_hour', '').strip())
+        end_hour = int(request.json.get('end_hour', '').strip())
+        logger.info(f"Parsed start_hour: {start_hour}, end_hour: {end_hour}")
+
+        if not (0 <= start_hour < len(Data)) or not (0 <= end_hour < len(Data)):
+            return jsonify({"error": f"Choose values between 0 and {len(Data)-1}."}), 400
+        if start_hour > end_hour:
+            return jsonify({"error": "Start hour must be less than or equal to end hour!"}), 400
+
+        zoomed_data = Data.iloc[start_hour:end_hour + 1]
+        if zoomed_data.empty:
+            return jsonify({"error": "No data found in the selected time range."}), 404
+
+        # Plotting
+        fig = make_subplots(rows=3, cols=1, subplot_titles=('Soil Moisture', 'Light Level', 'Temperature'))
+
+        fig.add_trace(go.Scatter(x=zoomed_data['timestamp'], y=zoomed_data['soil_moisture'],
+                                 mode='lines', name='Soil Moisture', line=dict(color='blue')), row=1, col=1)
+        low_moisture = zoomed_data[zoomed_data['health_status'] == 'Low moisture Plant needs more water']
+        fig.add_trace(go.Scatter(x=low_moisture['timestamp'], y=low_moisture['soil_moisture'],
+                                 mode='markers', name='Low Moisture', marker=dict(color='red', size=10)), row=1, col=1)
+
+        fig.add_trace(go.Scatter(x=zoomed_data['timestamp'], y=zoomed_data['light_level'],
+                                 mode='lines', name='Light Level', line=dict(color='orange')), row=2, col=1)
+        low_light = zoomed_data[zoomed_data['health_status'] == 'Low light Plant needs more light']
+        fig.add_trace(go.Scatter(x=low_light['timestamp'], y=low_light['light_level'],
+                                 mode='markers', name='Low Light', marker=dict(color='yellow', size=10)), row=2, col=1)
+
+        fig.add_trace(go.Scatter(x=zoomed_data['timestamp'], y=zoomed_data['temperature'],
+                                 mode='lines', name='Temperature', line=dict(color='red')), row=3, col=1)
+        too_hot = zoomed_data[zoomed_data['health_status'] == 'Too Hot Plant should be exposed to less heat']
+        fig.add_trace(go.Scatter(x=too_hot['timestamp'], y=too_hot['temperature'],
+                                 mode='markers', name='Too Hot', marker=dict(color='purple', size=10)), row=3, col=1)
+
+        fig.update_layout(height=600, width=800, title_text="Zoomed Plant Data")
+        fig.update_xaxes(title_text="Time", row=1, col=1)
+        fig.update_xaxes(title_text="Time", row=2, col=1)
+        fig.update_xaxes(title_text="Time", row=3, col=1)
+        fig.update_yaxes(title_text="Moisture (%)", row=1, col=1)
+        fig.update_yaxes(title_text="Light (lux)", row=2, col=1)
+        fig.update_yaxes(title_text="Temperature (°C)", row=3, col=1)
+
+        plot_html = fig.to_html(full_html=False)
+
+        return jsonify({"plot_html": plot_html}), 200
+
+    except ValueError as e:
+        logger.error(f"ValueError in zoom route for {username}: {str(e)}, Form data: {request.json}")
+        return jsonify({"error": f"Invalid input: {str(e)}"}), 400
+    except KeyError as e:
+        logger.error(f"KeyError in zoom route for {username}: {str(e)}, Form data: {request.json}")
+        return jsonify({"error": f"Missing field: {str(e)}"}), 400
+    except Exception as e:
+        logger.error(f"Unexpected error in zoom route for {username}: {str(e)}, Form data: {request.json}")
+        return jsonify({"error": f"Unexpected error: {str(e)}"}), 500
+
 
 
 # personalized dashboard 
@@ -365,77 +355,65 @@ def save_users(users):
         # Could log or raise in real app
         pass
 
-@app.route('/signup', methods=["POST"])
+@app.route('/signup', methods=["GET", "POST"])
 def signup():
-    data = request.get_json()
-    username = data.get("username", "").strip()
-    email = data.get("email", "").strip()
-    password = data.get("password", "").strip()
-    confirm_password = data.get("confirm_password", "").strip()
+    if request.method == "POST":
+        data = request.get_json()
+        username = data.get("username", "").strip()
+        email = data.get("email", "").strip()
+        password = data.get("password", "").strip()
+        confirm_password = data.get("confirm_password", "").strip()
 
-  
-    if not username:
-        return jsonify({"error": "Username is required"}), 400
-    if len(username) < 3:
-        return jsonify({"error": "Username must be at least 3 characters"}), 400
+        if not username:
+            return jsonify({"success": False, "message": "Username is required"}), 400
+        elif not email:
+            return jsonify({"success": False, "message": "Email is required"}), 400
+        elif not password:
+            return jsonify({"success": False, "message": "Password is required"}), 400
+        elif confirm_password != password:
+            return jsonify({"success": False, "message": "Passwords do not match"}), 400
 
-    if not email:
-        return jsonify({"error": "Email is required"}), 400
-   
-    if not re.match(r"^[^\s@]+@[^\s@]+\.[^\s@]+$", email):
-        return jsonify({"error": "Invalid email format"}), 400
+        users = load_users()
+        if username in users:
+            return jsonify({"success": False, "message": "Username already exists"}), 409
 
-    if not password:
-        return jsonify({"error": "Password is required"}), 400
-    if len(password) < 6:
-        return jsonify({"error": "Password must be at least 6 characters"}), 400
+        hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
+        users[username] = {"email": email, "password": hashed_password}
+        save_users(users)
 
-    if password != confirm_password:
-        return jsonify({"error": "Passwords do not match"}), 400
-
-    users = load_users()
-    if username in users:
-        return jsonify({"error": "Username already exists"}), 409
-
-    hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
-    users[username] = {"email": email, "password": hashed_password}
-    save_users(users)
-
-    # Create empty CSV file for user data (if your app requires it)
-    # e.g., create_user_csv(username)
-
-    session['username'] = username
-    return jsonify({"message": "Signup successful", "username": username}), 201
+        session['username'] = username
+        return jsonify({"success": True, "message": "Signup successful", "username": username}), 201
+    return render_template('signup.html')
 
 
-
-@app.route('/login', methods=["POST"])
+@app.route('/login', methods=["GET", "POST"])
 def login():
-    if not request.is_json:
-        return jsonify({'error': 'Request must be JSON'}), 400
+    if request.method == "POST":
+        data = request.get_json()
+        username = data.get("username", "").strip()
 
-    data = request.get_json()
-    username = data.get("username", "").strip()
-    password = data.get("password", "").strip()
+        if not username:
+            return jsonify({"success": False, "message": "Username is required"}), 400
 
-    users = load_users()
-    user = users.get(username)
+        users = load_users()
+        if username not in users:
+            return jsonify({"success": False, "message": "User not found"}), 404
 
-    if not user or not check_password_hash(user['password'], password):
-        return jsonify({'error': 'Invalid username or password'}), 401
-
-    session['username'] = username
-    return jsonify({'message': 'Login successful', 'username': username}), 200
+        session['username'] = username
+        return jsonify({"success": True, "message": "Login successful", "username": username}), 200
+    return render_template('login.html')
 
 
-            
-@app.route('/logout', methods=["POST"])
+@app.route('/logout', methods=['GET', 'POST'])
 def logout():
     session.pop('username', None)
-    return jsonify({'message': 'Logout successful'}), 200
+    if request.method == 'POST':
+        return jsonify({'message': 'Logout successful'}), 200
+    else:
+        return redirect(url_for('login'))
 
 
-    
+
 
 def calculate_health_score(data):
     moisture_score = min(100, max(0, (data['soil_moisture'].mean() / 100) * 100))
