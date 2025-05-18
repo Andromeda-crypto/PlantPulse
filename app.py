@@ -374,7 +374,7 @@ def signup():
             if username in users:
                 error = "Username already exists"
             else:
-                hashed_password = generate_password_hash(password)
+                hashed_password = generate_password_hash(password,method='pbkdf2:sha256')
                 users[username] = {"email": email, "password": hashed_password}
                 save_users(users)
                 
