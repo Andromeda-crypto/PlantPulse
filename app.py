@@ -44,10 +44,17 @@ def load_latest_data():
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+@app.route('/home')
+def user_home():
+    if "username" in session:
+        return redirect(url_for('login'))
+    return render_template('home.html')
+
+
 @app.route('/')
 def home():
     if "username" in session:
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('user_home'))
     return redirect(url_for('login'))
     
 
@@ -299,7 +306,7 @@ def login():
         username  = request.form.get('username').strip()
         if username:
             session['username'] = username
-            return redirect(url_for('home'))
+            return redirect(url_for('user_home'))
         else:
             return render_template('login.html', error='Please enter a username')
     return render_template('login.html')
