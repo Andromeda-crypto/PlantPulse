@@ -251,6 +251,7 @@ def zoom():
                                  mode='markers', name='Low Moisture', marker=dict(color='red', size=10)), row=1, col=1)
 
 
+
         fig.add_trace(go.Scatter(x=zoomed_data['timestamp'], y=zoomed_data['light_level'],
                                  mode='lines', name='Light Level', line=dict(color='orange')), row=2, col=1)
         low_light = zoomed_data[zoomed_data['health_status'] == 'Low light Plant needs more light']
