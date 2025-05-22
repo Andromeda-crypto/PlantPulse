@@ -232,6 +232,7 @@ def zoom():
         end_hour = int(request.json.get('end_hour', '').strip())
         logger.info(f"Parsed start_hour: {start_hour}, end_hour: {end_hour}")
 
+
         if not (0 <= start_hour < len(Data)) or not (0 <= end_hour < len(Data)):
             return jsonify({"error": f"Choose values between 0 and {len(Data)-1}."}), 400
         if start_hour > end_hour:
