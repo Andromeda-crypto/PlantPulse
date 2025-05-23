@@ -216,16 +216,17 @@ def query():
 
 @app.route('/zoom', methods=['GET', 'POST'])
 def zoom():
+    username = session.get("username")
+    print("Username in session:", username) # Debugging line
     if "username" not in session:
         return jsonify({"error": "Unauthorized: Please log in to view your data."}), 401
     
-    username = session["username"]
+    
     Data, load_error = load_latest_data(username)
-    Data = load_latest_data(username)
-    print("Username in session:", session.get("username")) # Debugging line
     print("Data loaded:", Data) # Debugging line
 
-    if Data.empty:
+
+    if Data is None or Data.empty:
         logger.warning(f"Zoom route: No data available for user {username}")
         return jsonify({"error": f"No data available - {load_error}"}), 404
 
