@@ -228,7 +228,7 @@ def zoom():
 
     if Data is None or Data.empty:
         logger.warning(f"Zoom route: No data available for user {username}")
-        return jsonify({"error": f"No data available - {load_error}"}), 404
+        return render_template('no_data.html', error=None,username=username)
 
     logger.info(f"Received form data from {username}: {request.json}")
     try:
