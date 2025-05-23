@@ -193,6 +193,9 @@ def query():
     if load_error:
         return jsonify({"success": False, "error": load_error}), 500
     
+    if Data is None or Data.empty:
+        return render_template('no_data.html',message="No data available", username=username, show_form=False)
+    
     if request.method == 'POST':
         try:
             hour = int(request.form['hour'])
