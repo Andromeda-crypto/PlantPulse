@@ -14,6 +14,15 @@ import numpy as np
 import logging
 from PIL import Image
 import sqlite3
+from image_utils import (
+    allowed_file,
+    validate_file,
+    save_file,
+    load_resize_image,
+    is_image_blurry,
+    calculate_image_features
+    )
+
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -67,113 +76,49 @@ def home():
     return render_template('index.html')
 
     
-
 @app.route('/photo', methods=['GET', 'POST'])
 def photo():
     if request.method == 'POST':
         if 'photo' not in request.files:
-            return jsonify({"success": False, "message": "No file part in request"}), 400
+            return render_template('photo.html', message="No file part in request.")
         
         file = request.files['photo']
-        
-        if file.filename == '':
-            return jsonify({"success": False, "message": "No file selected"}), 400
-        
-        if not allowed_file(file.filename):
-            return jsonify({"success": False, "message": "File type not allowed. Please upload .jpg, .png, or .jpeg"}), 400
-        
-        file.seek(0, os.SEEK_END)
-        file_length = file.tell()
-        file.seek(0)
-        if file_length > 5 * 1024 * 1024:
-            return jsonify({"success": False, "message": "File too large. Maximum size is 5MB"}), 400
+        valid, msg = validate_file(file)
+        if not valid:
+            return render_template('photo.html', message=msg)
         
         try:
+            # Verify image using PIL to avoid corrupted files
+            from PIL import Image
+            file.seek(0)
             Image.open(file).verify()
             file.seek(0)
-            
-            filename = secure_filename(file.filename)
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(filepath)
-            
-            img = cv2.imread(filepath)
-            if img is None:
-                os.remove(filepath)
-                return jsonify({"success": False, "message": "Error: Could not read image file."}), 400
-            
-            img = cv2.resize(img, (512, 512))
-            height, width = img.shape[:2]
-            
-            if height < 100 or width < 100:
-                os.remove(filepath)
-                return jsonify({"success": False, "message": "Error: Image is too small."}), 400
-            
-            blur = cv2.Laplacian(img, cv2.CV_64F).var()
-            if blur < 100:
-                result = "Image is blurry! Please upload a clearer image."
-                return jsonify({"success": True, "message": f"Image Saved: {filename}", "filename": filename, "result": result}), 200
-            
-            edges = cv2.Canny(img, 100, 200)
-            edge_density = np.sum(edges) / 255 / (img.shape[0] * img.shape[1])
-            edge_count = np.sum(edges) / 255
-            hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-            brown_mask = cv2.inRange(hsv, (10, 20, 0), (40, 100, 255))
-            brown_percent = np.sum(brown_mask) / (img.shape[0] * img.shape[1]) * 100
-            green_mask = cv2.inRange(hsv, (35, 40, 40), (85, 255, 255))
-            green_percent = np.sum(green_mask) / (img.shape[0] * img.shape[1]) * 100
-            color_var = np.std(img)
-            avg_color = img.mean(axis=0).mean(axis=0)
-            
-            is_soil = edge_count > 5000 and brown_percent > 60 and color_var > 50 and edge_density > 10
-            is_plant = green_percent > 60 and edge_density > 5 and color_var < 50
-            
-            brightness = img.mean()
-            content = "unknown"
-            
-            if is_plant and not is_soil:
-                content = 'plant'
-            elif is_soil and not is_plant:
-                content = "soil"
-            elif is_soil and is_plant and green_percent > 40 and brown_percent > 40:
-                content = "Plant and Soil"
-            
-            result = ""
-            if content == "unknown":
-                result = "Not soil or plant–upload a soil or plant pic!"
-            elif content == "soil":
-                result = "Soil: Wet" if avg_color[0] < 70 else "Soil: Dry"
-            elif content == "plant":
-                yellow_mask = cv2.inRange(hsv, (20, 40, 40), (35, 255, 255))
-                yellow_percent = np.sum(yellow_mask) / (img.shape[0] * img.shape[1]) * 100
-                result = "Plant: Healthy" if yellow_percent < 20 else "Plant: Stressed"
-            elif content == "Plant and Soil":
-                yellow_mask = cv2.inRange(hsv, (20, 40, 40), (35, 255, 255))
-                yellow_percent = np.sum(yellow_mask) / (img.shape[0] * img.shape[1]) * 100
-                soil_status = "Wet" if avg_color[0] < 70 else "Dry"
-                plant_status = "Healthy" if yellow_percent < 20 else "Stressed"
-                result = f"{soil_status}, {plant_status}"
-                if soil_status == "Wet" and plant_status == "Stressed":
-                    result += "–Overwatered?"
-                elif soil_status == "Dry" and plant_status == "Stressed":
-                    result += "–Underwatered?"
-            
-            elif brightness < 50:
-                result = "Image is too dark!"
-            elif brightness > 200:
-                result = "Too bright–reduce brightness."
-            else:
-                result = "Balanced"
-            
-            return jsonify({"success": True, "message": f"Image Saved: {filename}", "filename": filename, "result": result}), 200
+        except Exception:
+            return render_template('photo.html', message="Uploaded file is not a valid image.")
         
-        except Exception as e:
-            if os.path.exists(filepath):
-                os.remove(filepath)
-            return jsonify({"success": False, "message": f"Error processing image: {str(e)}"}), 500
+        filename, filepath = save_file(file, app.config['UPLOAD_FOLDER'])
+        
+        img, msg = load_and_resize_image(filepath)
+        if img is None:
+            os.remove(filepath)
+            return render_template('photo.html', message=msg)
+        
+        height, width = img.shape[:2]
+        if height < 100 or width < 100:
+            os.remove(filepath)
+            return render_template('photo.html', message="Image is too small.")
+        
+        if is_image_blurry(img):
+            result = "Image is blurry! Please upload a clearer image."
+            return render_template('photo.html', message=f"Image Saved: {filename}", filename=filename, result=result)
+        
+        features = calculate_image_features(img)
+        content = analyze_content(features)
+        result = build_result_message(content, features)
+        
+        return render_template('photo.html', message=f"Image Saved: {filename}", filename=filename, result=result)
     
-    # For GET requests, just return a simple JSON message or status
-    return jsonify({"message": "Please POST an image file to this endpoint"}), 200
-
+    return render_template('photo.html')
 @app.route('/Uploads/<filename>')
 def serve_upload(filename):
     filename = secure_filename(filename)
