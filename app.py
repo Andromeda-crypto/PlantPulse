@@ -221,6 +221,9 @@ def zoom():
     
     username = session["username"]
     Data, load_error = load_latest_data(username)
+    Data = load_latest_data(username)
+    print("Username in session:", session.get("username")) # Debugging line
+    print("Data loaded:", Data) # Debugging line
 
     if Data.empty:
         logger.warning(f"Zoom route: No data available for user {username}")
