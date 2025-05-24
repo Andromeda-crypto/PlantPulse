@@ -20,7 +20,9 @@ from image_utils import (
     save_file,
     load_resize_image,
     is_image_blurry,
-    calculate_image_features
+    calculate_image_features,
+    analyze_content,
+    build_result_message,
     )
 
 
@@ -98,7 +100,7 @@ def photo():
         
         filename, filepath = save_file(file, app.config['UPLOAD_FOLDER'])
         
-        img, msg = load_and_resize_image(filepath)
+        img, msg = load_resize_image(filepath)
         if img is None:
             os.remove(filepath)
             return render_template('photo.html', message=msg)
