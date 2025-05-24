@@ -282,8 +282,7 @@ def dashboard():
     return render_template('dashboard.html',
                            username=username,
                            stats=stats,
-                           moisture_chart=moisture_chart,  # fixed typo here
-                           light_chart=light_chart,
+                           moisture_chart=moisture_chart,  
                            temperature_chart=temperature_chart,
                            health_chart=health_chart,
                            alerts=alerts)

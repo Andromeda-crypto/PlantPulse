@@ -1,3 +1,6 @@
+// This is a simple React application that allows users to input start and end hours
+// for zooming in on a plot. It sends the input to a Flask backend and displays the resulting plot.
+
 import React, { useState } from 'react';
 
 function App() {

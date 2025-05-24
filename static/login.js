@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", function () {
         e.preventDefault();  // Prevent page reload
 
         const username = document.getElementById("username").value.trim();
-        const password = document.getElementById("password").value.trim();  // Make sure you have this input in your form
+        const password = document.getElementById("password").value.trim();  
 
         if (!username) {
             alert("Please enter a username.");
