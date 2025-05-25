@@ -136,7 +136,7 @@ def photo():
             'result': result
         })
 
-    # For GET request — load the HTML page
+    
     return render_template('photo.html')
 
 
