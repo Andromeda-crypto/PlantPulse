@@ -136,7 +136,6 @@ def photo():
             'result': result
         })
 
-    
     return render_template('photo.html')
 
 
