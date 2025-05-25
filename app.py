@@ -78,49 +78,68 @@ def home():
     return render_template('index.html')
 
     
+
 @app.route('/photo', methods=['GET', 'POST'])
 def photo():
     if request.method == 'POST':
         if 'photo' not in request.files:
-            return render_template('photo.html', message="No file part in request.")
-        
+            return jsonify({'success': False, 'message': 'No file part in request.'})
+
         file = request.files['photo']
+
+        # Validate file extension and size
         valid, msg = validate_file(file)
         if not valid:
-            return render_template('photo.html', message=msg)
-        
+            return jsonify({'success': False, 'message': msg})
+
         try:
-            # Verify image using PIL to avoid corrupted files
-            from PIL import Image
             file.seek(0)
-            Image.open(file).verify()
+            Image.open(file).verify()  # Ensures it's not a corrupt image
             file.seek(0)
         except Exception:
-            return render_template('photo.html', message="Uploaded file is not a valid image.")
-        
+            return jsonify({'success': False, 'message': 'Uploaded file is not a valid image.'})
+
+        # Save file to UPLOAD_FOLDER
         filename, filepath = save_file(file, app.config['UPLOAD_FOLDER'])
-        
+
+        # Load and resize the image
         img, msg = load_resize_image(filepath)
         if img is None:
             os.remove(filepath)
-            return render_template('photo.html', message=msg)
-        
+            return jsonify({'success': False, 'message': msg})
+
+        # Check resolution
         height, width = img.shape[:2]
         if height < 100 or width < 100:
             os.remove(filepath)
-            return render_template('photo.html', message="Image is too small.")
-        
+            return jsonify({'success': False, 'message': 'Image is too small.'})
+
+        # Check blur
         if is_image_blurry(img):
             result = "Image is blurry! Please upload a clearer image."
-            return render_template('photo.html', message=f"Image Saved: {filename}", filename=filename, result=result)
-        
+            return jsonify({
+                'success': True,
+                'message': f"Image Saved: {filename}",
+                'filename': filename,
+                'result': result
+            })
+
+        # Feature extraction and model analysis
         features = calculate_image_features(img)
         content = analyze_content(features)
         result = build_result_message(content, features)
-        
-        return render_template('photo.html', message=f"Image Saved: {filename}", filename=filename, result=result)
-    
+
+        return jsonify({
+            'success': True,
+            'message': f"Image Saved: {filename}",
+            'filename': filename,
+            'result': result
+        })
+
+    # For GET request — load the HTML page
     return render_template('photo.html')
+
+
 @app.route('/Uploads/<filename>')
 def serve_upload(filename):
     filename = secure_filename(filename)
