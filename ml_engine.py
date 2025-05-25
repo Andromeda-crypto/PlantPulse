@@ -16,7 +16,7 @@ def analyze_plant_image(filepath):
 
     plant_type = classify_plant(img) # Later
     health_status = diagnose_health(img,features) # later
-    suggestions = generate_suggestions(health_status,featues) # later 
+    suggestions = generate_suggestions(health_status,features) # later 
 
     return {
         "status": "ok",
@@ -26,8 +26,19 @@ def analyze_plant_image(filepath):
         "features": features
     }
 
-def clssify_palnt(img):
+def classify_plant(img):
     # Dummy for now, will be replaced with actual ML model
     return "Unknown Plant Type"
+
+def diagnose_health(img,features):
+    # Dummy for now, will be replaced with actual ML model
+    return "health status unknown"
+
+def generate_suggestions(health_status, features):
+    # Dummy for now, will be replaced with actual ML model
+    if health_status == "health status unknown":
+        return "No suggestions available"
+    return "Suggestions based on health status"
+
 
 
