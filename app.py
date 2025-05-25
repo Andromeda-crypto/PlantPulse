@@ -14,6 +14,7 @@ import numpy as np
 import logging
 from PIL import Image
 import sqlite3
+from ml_engine import analyze_plant_image
 from image_utils import (
     allowed_file,
     validate_file,
@@ -81,63 +82,37 @@ def home():
 
     
 
+
+
 @app.route('/photo', methods=['GET', 'POST'])
 def photo():
     if request.method == 'POST':
         if 'photo' not in request.files:
-            return jsonify({'success': False, 'message': 'No file part in request.'})
-
+            return render_template('photo.html', message="No file part in request.")
+        
         file = request.files['photo']
-
-        # Validate file extension and size
         valid, msg = validate_file(file)
         if not valid:
-            return jsonify({'success': False, 'message': msg})
-
+            return render_template('photo.html', message=msg)
+        
         try:
+            from PIL import Image
             file.seek(0)
-            Image.open(file).verify()  # Ensures it's not a corrupt image
+            Image.open(file).verify()
             file.seek(0)
         except Exception:
-            return jsonify({'success': False, 'message': 'Uploaded file is not a valid image.'})
-
-        # Save file to UPLOAD_FOLDER
+            return render_template('photo.html', message="Uploaded file is not a valid image.")
+        
         filename, filepath = save_file(file, app.config['UPLOAD_FOLDER'])
 
-        # Load and resize the image
-        img, msg = load_resize_image(filepath)
-        if img is None:
-            os.remove(filepath)
-            return jsonify({'success': False, 'message': msg})
+        result = analyze_plant_image(filepath)
+        if result["status"] != "ok":
+            return render_template('photo.html', message=result.get("message", "Error in analysis."))
 
-        # Check resolution
-        height, width = img.shape[:2]
-        if height < 100 or width < 100:
-            os.remove(filepath)
-            return jsonify({'success': False, 'message': 'Image is too small.'})
-
-        # Check blur
-        if is_image_blurry(img):
-            result = "Image is blurry! Please upload a clearer image."
-            return jsonify({
-                'success': True,
-                'message': f"Image Saved: {filename}",
-                'filename': filename,
-                'result': result
-            })
-
-        # Feature extraction and model analysis
-        features = calculate_image_features(img)
-        content = analyze_content(features)
-        result = build_result_message(content, features)
-
-        return jsonify({
-            'success': True,
-            'message': f"Image Saved: {filename}",
-            'filename': filename,
-            'result': result
-        })
-
+        return render_template('photo.html',
+                               message=f"Image Saved: {filename}",
+                               filename=filename,
+                               result=result)
     return render_template('photo.html')
 
 @app.route('/Uploads/<filename>')
