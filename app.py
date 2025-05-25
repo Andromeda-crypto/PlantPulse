@@ -38,6 +38,8 @@ UPLOAD_FOLDER = os.path.join(BASE_DIR, 'Uploads')
 CSV_DIR = os.path.join(BASE_DIR, 'csv runs')
 DB_PATH = os.path.join(BASE_DIR, 'plantpulse.db')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+app.config['UPLOAD_FOLDER'] = os.path.join(os.getcwd(), 'uploads')
+
 
 
 # Create directories
@@ -137,6 +139,11 @@ def photo():
         })
 
     return render_template('photo.html')
+
+@app.route('/Uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
 
 
 @app.route('/Uploads/<filename>')
