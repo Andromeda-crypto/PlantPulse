@@ -75,18 +75,15 @@
             </div>
         </div>
     </nav>
+
     <div class="container mt-4">
         <h1 class="text-center mb-4" style="color: #2e7d32;">Upload Plant Photo</h1>
-        {% if message %}
-        <div class="alert alert-info">{{ message }}</div>
-        {% endif %}
-        {% if result %}
-        <div class="alert alert-info">{{ result }}</div>
-        {% endif %}
+
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title">Upload Photo</h5>
-                <form method="POST" enctype="multipart/form-data">
+                <div id="alerts"></div>
+                <form id="photoForm">
                     <div class="mb-3">
                         <label for="photo" class="form-label">Select Image (JPG, PNG):</label>
                         <input type="file" class="form-control" id="photo" name="photo" accept=".jpg,.jpeg,.png" required>
@@ -95,59 +92,61 @@
                 </form>
             </div>
         </div>
-        {% if filename %}
-        <div class="card mt-4">
-            <img src="/Uploads/{{ filename }}" class="card-img-top" alt="Uploaded Image">
-            <div class="card-body">
-                <h5 class="card-title">Uploaded Image</h5>
+
+        <div id="preview" class="mt-4 d-none">
+            <div class="card">
+                <img id="uploadedImage" class="card-img-top" alt="Uploaded Image">
+                <div class="card-body">
+                    <h5 class="card-title">Uploaded Image</h5>
+                    <p class="card-text" id="resultText"></p>
+                </div>
             </div>
         </div>
-        {% endif %}
     </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-document.getElementById('photoForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
+        document.getElementById('photoForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
 
-    const fileInput = document.getElementById('photo');
-    const file = fileInput.files[0];
-    const alerts = document.getElementById('alerts');
-    const preview = document.getElementById('preview');
-    const resultText = document.getElementById('resultText');
-    const uploadedImage = document.getElementById('uploadedImage');
+            const fileInput = document.getElementById('photo');
+            const file = fileInput.files[0];
+            const alerts = document.getElementById('alerts');
+            const preview = document.getElementById('preview');
+            const resultText = document.getElementById('resultText');
+            const uploadedImage = document.getElementById('uploadedImage');
 
-    alerts.innerHTML = '';
-    preview.classList.add('d-none');
+            alerts.innerHTML = '';
+            preview.classList.add('d-none');
 
-    if (!file) {
-        alerts.innerHTML = '<div class="alert alert-warning">Please select an image file.</div>';
-        return;
-    }
+            if (!file) {
+                alerts.innerHTML = '<div class="alert alert-warning">Please select an image file.</div>';
+                return;
+            }
 
-    const formData = new FormData();
-    formData.append('photo', file);
+            const formData = new FormData();
+            formData.append('photo', file);
 
-    try {
-        const response = await fetch('/photo', {
-            method: 'POST',
-            body: formData
+            try {
+                const response = await fetch('/photo', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    alerts.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+                } else {
+                    alerts.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                    uploadedImage.src = `/Uploads/${data.filename}`;
+                    resultText.innerText = data.result;
+                    preview.classList.remove('d-none');
+                }
+            } catch (err) {
+                alerts.innerHTML = `<div class="alert alert-danger">Error uploading image.</div>`;
+            }
         });
-
-        const data = await response.json();
-
-        if (!data.success) {
-            alerts.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
-        } else {
-            alerts.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
-            uploadedImage.src = `/Uploads/${data.filename}`;
-            resultText.innerText = data.result;
-            preview.classList.remove('d-none');
-        }
-    } catch (err) {
-        alerts.innerHTML = `<div class="alert alert-danger">Error uploading image.</div>`;
-    }
-});
-</script>
-
+    </script>
 </body>
 </html>
