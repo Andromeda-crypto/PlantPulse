@@ -7,18 +7,18 @@ from werkzeug.utils import secure_filename
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', }
 
 def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.',1)[1].lower() in ALLOWED_EXTENSIONS
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg'}
+
 
 def validate_file(file):
     if file.filename == '':
-        return False, "No file selected"
+        return False, "No selected file."
+
     if not allowed_file(file.filename):
-        return False, "File type not allowed.\nUpload png, jpeg or jpg files only"
-    file.seek(0,os.SEEK_END)
-    if file.tell() > 5 * 1024 *1024:
-        return False, "File size eceeds 5MB"
-    file.seek(0)
-    return True
+        return False, "File type not allowed. Please upload a valid image file."
+
+    return True, "File is valid."
+
 
 def save_file(file,uploads):
     filename = secure_filename(file.filename)
