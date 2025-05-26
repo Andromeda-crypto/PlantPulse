@@ -87,31 +87,44 @@ def photo():
     if request.method == 'GET':
         return render_template('photo.html')
 
+    # Check if 'photo' is in the request files
     if 'photo' not in request.files:
         return render_template('photo.html', message="No file part in request.")
 
     file = request.files['photo']
+
+    # Check if a file is selected
     if file.filename == '':
         return render_template('photo.html', message="No file selected.")
 
+    # Secure the filename to avoid path traversal attacks
+    filename = secure_filename(file.filename)
+
+    # Validate the image by opening with PIL
     try:
-        file.seek(0)
-        Image.open(file).verify()
-        file.seek(0)
+        file.stream.seek(0)
+        Image.open(file.stream).verify()
+        file.stream.seek(0)
     except Exception as e:
         print(f"[ERROR] PIL verification failed: {e}")
         return render_template('photo.html', message="Uploaded file is not a valid image.")
 
+    # Save the file securely
     try:
-        filename = file.filename
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        upload_folder = app.config['UPLOAD_FOLDER']
+        if not os.path.exists(upload_folder):
+            os.makedirs(upload_folder)
+
+        filepath = os.path.join(upload_folder, filename)
         file.save(filepath)
         print(f"[DEBUG] Saved file to {filepath}")
     except Exception as e:
         print(f"[ERROR] Saving file failed: {e}")
         return render_template('photo.html', message="Failed to save image.")
 
+    # Success
     return render_template('photo.html', message=f"Image uploaded successfully: {filename}", filename=filename)
+
 
 
 
