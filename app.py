@@ -80,8 +80,6 @@ def user_home():
 def home():
     return render_template('index.html')
 
-    
-
 
 
 @app.route('/photo', methods=['GET', 'POST'])
@@ -89,24 +87,41 @@ def photo():
     if request.method == 'POST':
         if 'photo' not in request.files:
             return render_template('photo.html', message="No file part in request.")
-        
+
         file = request.files['photo']
-        valid, msg = validate_file(file)
+        try:
+            validation_result = validate_file(file)
+            if isinstance(validation_result, tuple):
+                valid, msg = validation_result
+            else:
+                valid, msg = False, "Validation function returned unexpected format."
+        except Exception as e:
+            print(f"[ERROR] validate_file crashed: {e}")
+            return render_template('photo.html', message="File validation error.")
+
         if not valid:
             return render_template('photo.html', message=msg)
-        
         try:
-            from PIL import Image
             file.seek(0)
             Image.open(file).verify()
             file.seek(0)
-        except Exception:
+        except Exception as e:
+            print(f"[ERROR] PIL verification failed: {e}")
             return render_template('photo.html', message="Uploaded file is not a valid image.")
-        
-        filename, filepath = save_file(file, app.config['UPLOAD_FOLDER'])
+        try:
+            filename, filepath = save_file(file, app.config['UPLOAD_FOLDER'])
+            print(f"[DEBUG] Image saved to: {filepath}")
+        except Exception as e:
+            print(f"[ERROR] Saving file failed: {e}")
+            return render_template('photo.html', message="Failed to save image.")
+        try:
+            result = analyze_plant_image(filepath)
+            print(f"[DEBUG] Analysis result: {result}")
+        except Exception as e:
+            print(f"[ERROR] analyze_plant_image failed: {e}")
+            return render_template('photo.html', message="Image analysis failed.")
 
-        result = analyze_plant_image(filepath)
-        if result["status"] != "ok":
+        if not result or result.get("status") != "ok":
             return render_template('photo.html', message=result.get("message", "Error in analysis."))
 
         return render_template('photo.html',
@@ -115,13 +130,14 @@ def photo():
                                result=result)
     return render_template('photo.html')
 
-@app.route('/Uploads/<filename>')
+
+@app.route('/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 
 
-@app.route('/Uploads/<filename>')
+@app.route('/uploads/<filename>')
 def serve_upload(filename):
     filename = secure_filename(filename)
     if not os.path.exists(os.path.join(app.config['UPLOAD_FOLDER'], filename)):
