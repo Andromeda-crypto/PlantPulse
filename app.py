@@ -82,53 +82,56 @@ def home():
 
 
 
-@app.route('/photo', methods=['GET', 'POST'])
+@app.route('/photo', methods=['POST'])
 def photo():
-    if request.method == 'POST':
-        if 'photo' not in request.files:
-            return render_template('photo.html', message="No file part in request.")
+    if 'photo' not in request.files:
+        return jsonify(success=False, message="No file part in request.")
 
-        file = request.files['photo']
-        try:
-            validation_result = validate_file(file)
-            if isinstance(validation_result, tuple):
-                valid, msg = validation_result
-            else:
-                valid, msg = False, "Validation function returned unexpected format."
-        except Exception as e:
-            print(f"[ERROR] validate_file crashed: {e}")
-            return render_template('photo.html', message="File validation error.")
+    file = request.files['photo']
+    if file.filename == '':
+        return jsonify(success=False, message="No file selected.")
 
-        if not valid:
-            return render_template('photo.html', message=msg)
-        try:
-            file.seek(0)
-            Image.open(file).verify()
-            file.seek(0)
-        except Exception as e:
-            print(f"[ERROR] PIL verification failed: {e}")
-            return render_template('photo.html', message="Uploaded file is not a valid image.")
-        try:
-            filename, filepath = save_file(file, app.config['UPLOAD_FOLDER'])
-            print(f"[DEBUG] Image saved to: {filepath}")
-        except Exception as e:
-            print(f"[ERROR] Saving file failed: {e}")
-            return render_template('photo.html', message="Failed to save image.")
-        try:
-            result = analyze_plant_image(filepath)
-            print(f"[DEBUG] Analysis result: {result}")
-        except Exception as e:
-            print(f"[ERROR] analyze_plant_image failed: {e}")
-            return render_template('photo.html', message="Image analysis failed.")
+    try:
+        validation_result = validate_file(file)
+        if isinstance(validation_result, tuple):
+            valid, msg = validation_result
+        else:
+            valid, msg = False, "Validation function returned unexpected format."
+    except Exception as e:
+        print(f"[ERROR] validate_file crashed: {e}")
+        return jsonify(success=False, message="File validation error.")
 
-        if not result or result.get("status") != "ok":
-            return render_template('photo.html', message=result.get("message", "Error in analysis."))
+    if not valid:
+        return jsonify(success=False, message=msg)
 
-        return render_template('photo.html',
-                               message=f"Image Saved: {filename}",
-                               filename=filename,
-                               result=result)
-    return render_template('photo.html')
+    try:
+        file.seek(0)
+        Image.open(file).verify()
+        file.seek(0)
+    except Exception as e:
+        print(f"[ERROR] PIL verification failed: {e}")
+        return jsonify(success=False, message="Uploaded file is not a valid image.")
+
+    try:
+        filename, filepath = save_file(file, app.config['UPLOAD_FOLDER'])
+        print(f"[DEBUG] Image saved to: {filepath}")
+    except Exception as e:
+        print(f"[ERROR] Saving file failed: {e}")
+        return jsonify(success=False, message="Failed to save image.")
+
+    try:
+        result = analyze_plant_image(filepath)
+        print(f"[DEBUG] Analysis result: {result}")
+    except Exception as e:
+        print(f"[ERROR] analyze_plant_image failed: {e}")
+        return jsonify(success=False, message="Image analysis failed.")
+
+    if not result or result.get("status") != "ok":
+        return jsonify(success=False, message=result.get("message", "Error in analysis."))
+
+    return jsonify(success=True, message=f"Image uploaded and analyzed successfully.", filename=filename, result=result.get("data", "No detailed result"))
+
+
 
 
 @app.route('/uploads/<filename>')
