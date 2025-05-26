@@ -82,27 +82,17 @@ def home():
 
 
 
-@app.route('/photo', methods=['POST'])
+@app.route('/photo', methods=['GET', 'POST'])
 def photo():
+    if request.method == 'GET':
+        return render_template('photo.html')
+
     if 'photo' not in request.files:
-        return jsonify(success=False, message="No file part in request.")
+        return render_template('photo.html', message="No file part in request.")
 
     file = request.files['photo']
     if file.filename == '':
-        return jsonify(success=False, message="No file selected.")
-
-    try:
-        validation_result = validate_file(file)
-        if isinstance(validation_result, tuple):
-            valid, msg = validation_result
-        else:
-            valid, msg = False, "Validation function returned unexpected format."
-    except Exception as e:
-        print(f"[ERROR] validate_file crashed: {e}")
-        return jsonify(success=False, message="File validation error.")
-
-    if not valid:
-        return jsonify(success=False, message=msg)
+        return render_template('photo.html', message="No file selected.")
 
     try:
         file.seek(0)
@@ -110,26 +100,18 @@ def photo():
         file.seek(0)
     except Exception as e:
         print(f"[ERROR] PIL verification failed: {e}")
-        return jsonify(success=False, message="Uploaded file is not a valid image.")
+        return render_template('photo.html', message="Uploaded file is not a valid image.")
 
     try:
-        filename, filepath = save_file(file, app.config['UPLOAD_FOLDER'])
-        print(f"[DEBUG] Image saved to: {filepath}")
+        filename = file.filename
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(filepath)
+        print(f"[DEBUG] Saved file to {filepath}")
     except Exception as e:
         print(f"[ERROR] Saving file failed: {e}")
-        return jsonify(success=False, message="Failed to save image.")
+        return render_template('photo.html', message="Failed to save image.")
 
-    try:
-        result = analyze_plant_image(filepath)
-        print(f"[DEBUG] Analysis result: {result}")
-    except Exception as e:
-        print(f"[ERROR] analyze_plant_image failed: {e}")
-        return jsonify(success=False, message="Image analysis failed.")
-
-    if not result or result.get("status") != "ok":
-        return jsonify(success=False, message=result.get("message", "Error in analysis."))
-
-    return jsonify(success=True, message=f"Image uploaded and analyzed successfully.", filename=filename, result=result.get("data", "No detailed result"))
+    return render_template('photo.html', message=f"Image uploaded successfully: {filename}", filename=filename)
 
 
 
