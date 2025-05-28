@@ -4,6 +4,7 @@ import csv
 import re
 import json
 from flask import Flask, render_template, request, send_from_directory, redirect, url_for, session, jsonify
+from flask_cors import CORS
 import pandas as pd
 import plotly.graph_objects as go
 from jinja2 import TemplateNotFound
@@ -34,6 +35,7 @@ logger = logging.getLogger(__name__)
 
 
 app = Flask(__name__, static_folder='static')
+CORS(app) # Enable CORS for all routes
 app.secret_key = '_my_project_secret_key_'
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'Uploads')
