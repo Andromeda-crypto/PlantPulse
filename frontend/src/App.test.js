@@ -12,3 +12,5 @@ test('renders input fields and zoom button', () => {
   expect(endInput).toBeInTheDocument();
   expect(zoomButton).toBeInTheDocument();
 });
+
+
