@@ -1,21 +1,22 @@
 // src/components/QueryForm.js
 
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 
-export default function QueryForm() {
-    const [query, setQuery] = useState('');
+export default function QueryForm({ onQuerySuccess }) {
+    const [startTime, setStartTime] = useState('');
+    const [endTime, setEndTime] = useState('');
     const [error, setError] = useState(null);
     const [result, setResult] = useState(null);
 
-    consthandleSubmit = async (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const res = await fetch('https://localhost:5000/query', {
-                method : 'POST',
-                headers : { 'Content-Type': 'application/json'},
-                credentials : 'include',
-                body: JSON.stringify({query}),
-});
+            const res = await fetch('http://localhost:5000/query', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ start_time: startTime, end_time: endTime }),
+            });
             const data = await res.json();
 
             if (res.ok) {
@@ -23,45 +24,49 @@ export default function QueryForm() {
                 setResult(data.result);
                 if (onQuerySuccess) {
                     onQuerySuccess(data);
-                };
+                }
             } else {
-                setError(data.error || "Query request failed");;
+                setError(data.error || "Query request failed");
             }
-            } catch (err) {
-                console.error(err);
-                setError("Network error");
-            }
-      }
+        } catch (err) {
+            console.error(err);
+            setError("Network error");
+        }
     };
 
-    // Render the form and result
-
     return (
-        <div>
+        <div className="query-container">
             <form onSubmit={handleSubmit} className="query-form">
-                <input 
-                type = "text" 
-                placehoder="Enter Start Time"
-                value={query}
-                onChange= {(e) => setQuery(e.target.value)}
-                required
-                />
-               
-                </form>
-
-            <form onUbmit={handleSubmit} className="query-form">
                 <input
-                type="number"
-                placeholder="Enter End Time"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                required
+                    type="text"
+                    placeholder="Enter Start Time"
+                    value={startTime}
+                    onChange={(e) => setStartTime(e.target.value)}
+                    required
                 />
-                </form> 
+                <input
+                    type="text"
+                    placeholder="Enter End Time"
+                    value={endTime}
+                    onChange={(e) => setEndTime(e.target.value)}
+                    required
+                />
+                <button type="submit">Go</button>
+            </form>
 
-                <button type="submit">Go</button>               
-                       </div>
-    )
+            {error && <p className="error-message">{error}</p>}
 
+            {result && (
+                <div className="query-result">
+                    <h3>Query Result:</h3>
+                    <pre>{JSON.stringify(result, null, 2)}</pre>
+                </div>
+            )}
+        </div>
+    );
+}
 
     
+
+  
+

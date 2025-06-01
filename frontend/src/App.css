@@ -54,3 +54,43 @@ h2 {
   background: #fafafa;
 }
 
+.query-container {
+  margin-top: 1rem;
+  max-width : 400px;
+  padding: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+}
+
+.query-form input {
+  display: block;
+  width:100%;
+  margin-bottom: 0.75rem;
+  padding:0.5rem;
+}
+
+.query-form button {
+  padding: 0.5rem 1rem;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.query-form button:hover {
+  background-color:#0056b3;
+}
+
+.error-message {
+  color: #d93025;
+  font-weight: bold;
+  margin-top: 0.5rem;
+}
+
+.query-result {
+  margin-top: 1rem;
+  background: #f7f7f7;
+padding: 1rem;
+border-radius: 8px;
+}
