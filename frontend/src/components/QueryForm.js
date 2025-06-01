@@ -36,4 +36,32 @@ export default function QueryForm() {
 
     // Render the form and result
 
+    return (
+        <div>
+            <form onSubmit={handleSubmit} className="query-form">
+                <input 
+                type = "text" 
+                placehoder="Enter Start Time"
+                value={query}
+                onChange= {(e) => setQuery(e.target.value)}
+                required
+                />
+               
+                </form>
+
+            <form onUbmit={handleSubmit} className="query-form">
+                <input
+                type="number"
+                placeholder="Enter End Time"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                required
+                />
+                </form> 
+
+                <button type="submit">Go</button>               
+                       </div>
+    )
+
+
     
