@@ -6,8 +6,8 @@ import SignupForm from './components/SignupForm';
 import { AuthProvider } from './context/AuthContext';
 import PrivateRoute from './components/PrivateRoute'; 
 import QueryForm from './components/QueryForm';
-import HomeForm from './components/Home';
-import PhotoForm from './components/Photoform';
+import HomeForm from './components/HomeForm';
+import PhotoForm from './components/PhotoForm';
 import './App.css';
 
 function App() {
