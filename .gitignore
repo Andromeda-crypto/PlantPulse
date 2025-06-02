@@ -2,3 +2,5 @@ data/plant_images/
 *.zip
 plant_images_subset.zip
 processed_dataset
+users.json
+# Ignore Python cache files
