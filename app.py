@@ -81,7 +81,7 @@ def user_home():
 
 @app.route('/')
 def home():
-    return render_template('index.html')
+    return jsonify({"message": "Welcome to Plant Monitor API"}), 200 
 
 
 @app.route('/photo', methods=['POST'])
