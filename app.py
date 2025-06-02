@@ -84,101 +84,82 @@ def home():
     return render_template('index.html')
 
 
-
-@app.route('/photo', methods=['GET', 'POST'])
+@app.route('/photo', methods=['POST'])
 def photo():
-    if request.method == 'GET':
-        return render_template('photo.html')
+    if 'username' not in session:
+        return jsonify({"success": False, "error": "User not logged in"}), 401
 
-    # Check if 'photo' is in the request files
     if 'photo' not in request.files:
-        return render_template('photo.html', message="No file part in request.")
+        return jsonify({"success": False, "error": "No file part in request."}), 400
 
     file = request.files['photo']
-
-    # Check if a file is selected
     if file.filename == '':
-        return render_template('photo.html', message="No file selected.")
+        return jsonify({"success": False, "error": "No file selected."}), 400
 
-    # Secure the filename to avoid path traversal attacks
     filename = secure_filename(file.filename)
 
-    # Validate the image by opening with PIL
     try:
         file.stream.seek(0)
         Image.open(file.stream).verify()
         file.stream.seek(0)
     except Exception as e:
-        print(f"[ERROR] PIL verification failed: {e}")
-        return render_template('photo.html', message="Uploaded file is not a valid image.")
+        return jsonify({"success": False, "error": "Invalid image file."}), 400
 
-    # Save the file securely
     try:
         upload_folder = app.config['UPLOAD_FOLDER']
-        if not os.path.exists(upload_folder):
-            os.makedirs(upload_folder)
-
+        os.makedirs(upload_folder, exist_ok=True)
         filepath = os.path.join(upload_folder, filename)
         file.save(filepath)
-        print(f"[DEBUG] Saved file to {filepath}")
     except Exception as e:
-        print(f"[ERROR] Saving file failed: {e}")
-        return render_template('photo.html', message="Failed to save image.")
+        return jsonify({"success": False, "error": "Failed to save image."}), 500
 
-    # Success
-    return render_template('photo.html', message=f"Image uploaded successfully: {filename}", filename=filename)
-
-
-
-
-
-@app.route('/uploads/<filename>')
-def uploaded_file(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
-
+    return jsonify({"success": True, "filename": filename}), 200
 
 
 @app.route('/uploads/<filename>')
 def serve_upload(filename):
     filename = secure_filename(filename)
-    if not os.path.exists(os.path.join(app.config['UPLOAD_FOLDER'], filename)):
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    if not os.path.exists(file_path):
         logger.error(f"File not found: {filename}")
-        return "File not found", 404
+        return jsonify({"error": "File not found"}), 404
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
-@app.route('/query', methods=['GET', 'POST'])
+
+@app.route('/query', methods=['POST'])
 def query():
     if "username" not in session:
         return jsonify({"success": False, "error": "Unauthorized"}), 401
-    
+
     username = session["username"]
     Data, load_error = load_latest_data(username)
-    
+
     if load_error:
         return jsonify({"success": False, "error": load_error}), 500
-    
+
     if Data is None or Data.empty:
-        return render_template('no_data.html',message="No data available", username=username, show_form=False)
-    
-    if request.method == 'POST':
-        try:
-            hour = int(request.form['hour'])
-            if 0 <= hour < len(Data):
-                row = Data.iloc[hour]
-                result = {
-                    "hour": hour,
-                    "soil_moisture": round(row['soil_moisture'], 2),
-                    "light_level": round(row['light_level'], 2),
-                    "temperature": round(row['temperature'], 2),
-                    "health_status": row['health_status']
-                }
-                return jsonify({"success": True, "result": result}), 200
-            else:
-                return jsonify({"success": False, "error": f"Hour must be between 0 and {len(Data)-1}"}), 400
-        except ValueError:
-            return jsonify({"success": False, "error": "Hour must be a number!"}), 400
-    
-    return jsonify({"message": "Please POST an 'hour' parameter to query data."}), 200
+        return jsonify({"success": False, "error": "No data available"}), 404
+
+    try:
+        data = request.json  # Expecting JSON from React
+        hour = int(data.get('hour'))
+        if 0 <= hour < len(Data):
+            row = Data.iloc[hour]
+            result = {
+                "hour": hour,
+                "soil_moisture": round(row['soil_moisture'], 2),
+                "light_level": round(row['light_level'], 2),
+                "temperature": round(row['temperature'], 2),
+                "health_status": row['health_status']
+            }
+            return jsonify({"success": True, "result": result}), 200
+        else:
+            return jsonify({"success": False, "error": f"Hour must be between 0 and {len(Data)-1}"}), 400
+    except ValueError:
+        return jsonify({"success": False, "error": "Hour must be a number!"}), 400
+    except Exception as e:
+        return jsonify({"success": False, "error": f"Unexpected error: {str(e)}"}), 500
+
 
 
 @app.route('/zoom', methods=['GET', 'POST'])
@@ -195,7 +176,7 @@ def zoom():
 
     if Data is None or Data.empty:
         logger.warning(f"Zoom route: No data available for user {username}")
-        return render_template('no_data.html', error=None,username=username)
+        return jsonify({"error": "No data available"}), 404
 
     logger.info(f"Received form data from {username}: {request.json}")
     try:
@@ -265,44 +246,33 @@ def zoom():
 def dashboard():
     username = session.get('username')
     if not username:
-        return redirect(url_for("login"))
-    
-    user_data_file = f"data/{username}.csv"
-    
-    if os.path.exists(user_data_file):
-        Data = pd.read_csv(user_data_file)
-    else:
-        Data, error = load_latest_data()
-        if error or Data.empty:
-            return render_template('dashboard.html',
-                                   error=error or "No data available",
-                                   username=username,
-                                   stats=None,
-                                   moisture_chart=None,
-                                   light_chart=None,
-                                   temperature_chart=None,
-                                   health_chart=None,
-                                   alerts=None)
-    
-    stats = {
-        "average_moisture": round(Data['soil_moisture'].mean(), 2),
-        "average_light": round(Data['light_level'].mean(), 2),
-        "average_temperature": round(Data['temperature'].mean(), 2),
-    }
+        return jsonify({"success": False, "error": "User not logged in"}), 401
 
-    moisture_chart = create_moisture_chart(Data)
-    light_chart = create_light_chart(Data)
-    temperature_chart = create_temperature_chart(Data)
-    health_chart = create_health_chart(Data)
-    alerts = generate_alerts(Data)
-    
-    return render_template('dashboard.html',
-                           username=username,
-                           stats=stats,
-                           moisture_chart=moisture_chart,  
-                           temperature_chart=temperature_chart,
-                           health_chart=health_chart,
-                           alerts=alerts)
+    user_data_file = f"data/{username}.csv"
+    try:
+        if os.path.exists(user_data_file):
+            Data = pd.read_csv(user_data_file)
+        else:
+            Data, error = load_latest_data(username)
+            if error or Data.empty:
+                return jsonify({"success": False, "error": error or "No data available"}), 404
+
+        stats = {
+            "average_moisture": round(Data['soil_moisture'].mean(), 2),
+            "average_light": round(Data['light_level'].mean(), 2),
+            "average_temperature": round(Data['temperature'].mean(), 2),
+        }
+
+        return jsonify({
+            "success": True,
+            "username": username,
+            "stats": stats,
+            "alerts": generate_alerts(Data)
+            # You can later include chart data too
+        })
+    except Exception as e:
+        return jsonify({"success": False, "error": f"Failed to load dashboard: {str(e)}"}), 500
+
 
 USER_DATA_FOLDER = 'user_data'
 if not os.path.exists(USER_DATA_FOLDER):
