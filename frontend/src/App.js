@@ -3,37 +3,49 @@ import ZoomForm from './components/ZoomForm';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import LoginForm from './components/LoginForm';
 import SignupForm from './components/SignupForm';
-//import { AuthProvider } from './context/AuthContext';
-//import PrivateRoute from './components/PrivateRoute'; 
 import QueryForm from './components/QueryForm';
 import HomeForm from './components/HomeForm';
 import PhotoForm from './components/PhotoForm';
+import { AuthProvider } from './auth/AuthContext';
+import PrivateRoute from './components/PrivateRoute'; // once you fix it
 import './App.css';
 
 function App() {
   return (
-    <div className="App">
-      <h2>Home</h2>
-      <HomeForm/>
-    </div>
+    <AuthProvider>
+      <Router>
+        <div className="App">
+          <Switch>
+            <Route exact path="/" component={HomeForm} />
+            <Route path="/login" component={LoginForm} />
+            <Route path="/signup" component={SignupForm} />
+            <PrivateRoute path="/zoom" component={ZoomForm} />
+            <PrivateRoute path="/query" component={QueryForm} />
+            <PrivateRoute path="/photo" component={PhotoForm} />
+          </Switch>
+        </div>
+      </Router>
+    </AuthProvider>
   );
 }
 
-function AppRouter(){ 
-  return (
-    <Router>
-      <Switch>
-        <Route path="/" exact component={HomeForm} />
-        <Route path="/login" component={LoginForm} />
-        <Route path="/signup" component={SignupForm} />
-        <Route path="/zoom" component={ZoomForm} />
-        <Route path="/query" component={QueryForm} />
-        <Route path="/photo" component={PhotoForm} />
-      </Switch>
-    </Router>
-  );
-  
-  
-}
 export default App;
+// This is the main application file that sets up the routing for the application.
+// It uses React Router to define different routes for the application.
+// The AuthProvider wraps the entire application to provide authentication context.
+// The Switch component is used to render the first matching route.
+// The PrivateRoute component is used to protect certain routes that require authentication.
+// The LoginForm, SignupForm, ZoomForm, QueryForm, HomeForm, and PhotoForm components are imported and rendered based on the route.
+// The App component is exported as the default export of the module.
+// The App component is the main entry point of the React application.
+// It sets up the routing and provides the authentication context to all components.
+// The App component uses the BrowserRouter from React Router to enable client-side routing.
+// The App component imports the necessary components and styles for the application.
+// The App component uses the Switch component to render different components based on the current route.
+// The App component is the main component that ties everything together in the React application.
+// The App component is the main entry point of the React application.
+// It sets up the routing and provides the authentication context to all components.
+// The App component uses the BrowserRouter from React Router to enable client-side routing.
+// The App component imports the necessary components and styles for the application.
+// The App component uses the Switch component to render different components based on the current route. 
 
