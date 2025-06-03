@@ -19,5 +19,21 @@ function App() {
   );
 }
 
+function AppRouter(){ 
+  return (
+    <Router>
+      <Switch>
+        <Route path="/" exact component={HomeForm} />
+        <Route path="/login" component={LoginForm} />
+        <Route path="/signup" component={SignupForm} />
+        <Route path="/zoom" component={ZoomForm} />
+        <Route path="/query" component={QueryForm} />
+        <Route path="/photo" component={PhotoForm} />
+      </Switch>
+    </Router>
+  );
+  
+  
+}
 export default App;
 
