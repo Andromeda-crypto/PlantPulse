@@ -1,11 +1,13 @@
 // src/components/LoginForm.js
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
+import './src/auth/AuthContext.js';
+import { AuthContext } from '../auth/AuthContext.js';
 
 export default function LoginForm({ onLoginSuccess }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
-
+  const { setUser, setLoading} = useContext(AuthContext)
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -17,8 +19,8 @@ export default function LoginForm({ onLoginSuccess }) {
       });
       const data = await res.json();
       if (res.ok) {
-        setError(null);
-        onLoginSuccess(data);
+        setUser(data);
+        setLoading(false);
       } else {
         setError(data.error || 'Login failed');
       }
