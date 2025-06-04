@@ -1,13 +1,13 @@
 import React from 'react';
 import ZoomForm from './components/ZoomForm';
-import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LoginForm from './components/LoginForm';
 import SignupForm from './components/SignupForm';
 import QueryForm from './components/QueryForm';
 import HomeForm from './components/HomeForm';
 import PhotoForm from './components/PhotoForm';
 import { AuthProvider } from './auth/AuthContext';
-import PrivateRoute from './components/PrivateRoute'; // once you fix it
+import PrivateRoute from './components/PrivateRoute';
 import './App.css';
 
 function App() {
@@ -15,14 +15,18 @@ function App() {
     <AuthProvider>
       <Router>
         <div className="App">
-          <Switch>
-            <Route exact path="/" component={HomeForm} />
-            <Route path="/login" component={LoginForm} />
-            <Route path="/signup" component={SignupForm} />
-            <PrivateRoute path="/zoom" component={ZoomForm} />
-            <PrivateRoute path="/query" component={QueryForm} />
-            <PrivateRoute path="/photo" component={PhotoForm} />
-          </Switch>
+          <Routes>
+            <Route path="/" element={<HomeForm />} />
+            <Route path="/login" element={<LoginForm />} />
+            <Route path="/signup" element={<SignupForm />} />
+            
+            {/* Protected routes */}
+            <Route element={<PrivateRoute />}>
+              <Route path="/zoom" element={<ZoomForm />} />
+              <Route path="/query" element={<QueryForm />} />
+              <Route path="/photo" element={<PhotoForm />} />
+            </Route>
+          </Routes>
         </div>
       </Router>
     </AuthProvider>
@@ -30,6 +34,7 @@ function App() {
 }
 
 export default App;
+
 // This is the main application file that sets up the routing for the application.
 // It uses React Router to define different routes for the application.
 // The AuthProvider wraps the entire application to provide authentication context.
