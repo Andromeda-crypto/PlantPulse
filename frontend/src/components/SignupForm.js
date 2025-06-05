@@ -30,6 +30,7 @@ export default function SignupForm({ onSignupSuccess }) {
         setError(data.error || 'Signup failed');
       }
     } catch (err) {
+      
       setError('Network error');
     }
   };
