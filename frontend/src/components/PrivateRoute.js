@@ -1,7 +1,7 @@
 // src/components/PrivateRoute.js
 import React, { useContext, useEffect } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
-import  {AuthContext} from '.src/auth/AuthContext.js'
+import  {AuthContext} from '../auth/AuthContext';
 
 import axios from 'axios';
 

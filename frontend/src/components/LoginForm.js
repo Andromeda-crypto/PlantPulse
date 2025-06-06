@@ -1,6 +1,6 @@
 // src/components/LoginForm.js
 import React, { useContext, useState } from 'react';
-import {AuthContext} from '.src/auth/AuthContext.js';
+import {AuthContext} from '../auth/AuthContext';
 
 
 export default function LoginForm({ onLoginSuccess }) {

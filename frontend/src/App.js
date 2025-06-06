@@ -12,8 +12,9 @@ import './App.css';
 
 function App() {
   return (
-    <AuthProvider>
+   
       <Router>
+         <AuthProvider>
         <div className="App">
           <Routes>
             <Route path="/" element={<HomeForm />} />
@@ -28,8 +29,9 @@ function App() {
             </Route>
           </Routes>
         </div>
+        </AuthProvider>
       </Router>
-    </AuthProvider>
+    
   );
 }
 
