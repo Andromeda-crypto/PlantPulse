@@ -17,15 +17,14 @@ function App() {
          <AuthProvider>
         <div className="App">
           <Routes>
-            <Route path="/" element={<HomeForm />} />
-            <Route path="/login" element={<LoginForm />} />
             <Route path="/signup" element={<SignupForm />} />
-            
+            <Route path="/login" element={<LoginForm />} />
             {/* Protected routes */}
             <Route element={<PrivateRoute />}>
               <Route path="/zoom" element={<ZoomForm />} />
               <Route path="/query" element={<QueryForm />} />
               <Route path="/photo" element={<PhotoForm />} />
+              <Route path="/home" element={<HomeForm />} />
             </Route>
           </Routes>
         </div>
