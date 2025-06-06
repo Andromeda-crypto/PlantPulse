@@ -1,13 +1,13 @@
 // src/components/SignupForm.js
 import React, { useState, useContext } from 'react';
-import  {AuthContext} from '.src/authAuthContext.js'
+import  {AuthContext} from '.src/auth/AuthContext.js'
 
 
 export default function SignupForm({ onSignupSuccess }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
-  const { setUser, setLoading} = usesContext(AuthContext)
+  const { setUser, setLoading} = useContext(AuthContext)
 
   const handleSubmit = async (e) => {
     e.preventDefault();
