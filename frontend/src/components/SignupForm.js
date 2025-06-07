@@ -6,6 +6,8 @@ import  { AuthContext } from '../auth/AuthContext' ;
 export default function SignupForm({ onSignupSuccess }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('');
+  const[ confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState(null);
   const { setUser, setLoading} = useContext(AuthContext)
 
@@ -13,7 +15,7 @@ export default function SignupForm({ onSignupSuccess }) {
     e.preventDefault();
 
     try {
-      const res = await fetch('http://127.0.0.1:3000/templates/signup.html', {
+      const res = await fetch('http://127.0.0.1:5000/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -31,7 +33,7 @@ export default function SignupForm({ onSignupSuccess }) {
         setError(data.error || 'Signup failed');
       }
     } catch (err) {
-      
+      console.error('Signup error:', err);
       setError('Network error');
     }
   };
@@ -47,11 +49,28 @@ export default function SignupForm({ onSignupSuccess }) {
       />
       <input
         type="password"
-        placeholder="password"
+        placeholder="Password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         required
       />
+      <input
+        type="email"
+        placeholder="Email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        required
+        />
+      < input 
+        type="password"
+        placeholder="Confirm Password"
+        value={confirmPassword}
+        onChange={(e) => setConfirmPassword(e.target.value)}
+        required
+      />
+      password != confirmPassword && (
+        <p className="error-message">Passwords donot match. Please try again</p>
+      )
       <button type="submit">Sign Up</button>
       {error && <p className="error-message">{error}</p>}
     </form>
