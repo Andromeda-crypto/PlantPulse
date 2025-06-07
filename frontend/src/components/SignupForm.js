@@ -13,7 +13,7 @@ export default function SignupForm({ onSignupSuccess }) {
     e.preventDefault();
 
     try {
-      const res = await fetch('http://localhost:5000/signup', {
+      const res = await fetch('http://127.0.0.1:3000/templates/signup.html', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
