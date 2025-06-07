@@ -33,7 +33,7 @@ export default function SignupForm({ onSignupSuccess }) {
         setError(data.error || 'Signup failed');
       }
     } catch (err) {
-      console.error('Signup error:', err);
+      console.error('Signup error:');
       setError('Network error');
     }
   };
@@ -76,5 +76,6 @@ export default function SignupForm({ onSignupSuccess }) {
     </form>
   );
 }
+
 
 
