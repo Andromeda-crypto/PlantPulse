@@ -303,7 +303,7 @@ def signup():
     if request.method == "POST":
         data = request.get_json()
         username = data.get("username", "").strip()
-        email = data.get("email", "").strip()
+        email = (data.get("email") or "").strip()
         password = data.get("password", "").strip()
         confirm_password = data.get("confirm_password", "").strip()
 
@@ -333,14 +333,21 @@ def signup():
 def login():
     if request.method == "POST":
         data = request.get_json()
-        username = data.get("username", "").strip()
+        username = (data.get("username", "")).strip()
+        password = (data.get("password", "")).strip()
 
         if not username:
             return jsonify({"success": False, "message": "Username is required"}), 400
+        if not password:
+            return jsonify({"success": False, "message": "Password is required"}), 400
 
         users = load_users()
-        if username not in users:
-            return jsonify({"success": False, "message": "User not found"}), 404
+        user = users.get(username)
+        if not user:
+            return jsonify({"success": False, "message": "User Not Found"}), 404
+        
+        if not check_password_hash(user['password'],password):
+            return jsonify({"success": False, "message": "Incorrect password"}), 401
 
         session['username'] = username
         return jsonify({"success": True, "message": "Login successful", "username": username}), 200
