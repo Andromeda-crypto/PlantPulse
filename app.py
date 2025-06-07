@@ -418,6 +418,16 @@ def generate_alerts(data):
         })
     return alerts
 
+@app.route('/')
+def serve():
+    return send_from_directory(app.static_folder,'index.html')
+
+@app.errorhandler(404)
+def not_found(e):
+    if os.path.exists(os.path.join(app.static_folder,'index.html')):
+        return send_from_directory(app.static_folder,'index.html')
+    return '404 Not Found', 404
+
 if __name__ == '__main__':
     app.run(debug=True)
 
