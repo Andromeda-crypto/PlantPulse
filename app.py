@@ -301,6 +301,8 @@ def save_users(users):
 @app.route('/signup', methods=["GET", "POST"])
 def signup():
     print("Signup route hit")
+    print("Received signup POST with:", data) # debugging
+
     if request.method == "POST":
         data = request.get_json()
         username = data.get("username", "").strip()
