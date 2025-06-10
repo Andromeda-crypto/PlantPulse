@@ -15,6 +15,7 @@ export default function SignupForm({ onSignupSuccess }) {
     e.preventDefault();
 
     try {
+      console.log('Sending signup request:', { username, email, password, confirmPassword });
       const res = await fetch('/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

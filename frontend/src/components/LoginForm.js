@@ -11,6 +11,7 @@ export default function LoginForm({ onLoginSuccess }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      console.log('Sending login requests:',{username, password});
       const res = await fetch('/login', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
@@ -18,6 +19,8 @@ export default function LoginForm({ onLoginSuccess }) {
         body: JSON.stringify({ username, password }),
       });
       const data = await res.json();
+      console.log('Received response:', res);
+      console.log('Response data:', data);
       if (res.ok) {
         setUser({ username: data.username });
         setLoading(false);
@@ -28,7 +31,7 @@ export default function LoginForm({ onLoginSuccess }) {
         setError(data.message || 'Login failed');
       }
     } catch (err) {
-      console.error('Login error:', err);
+      console.error('Network or server error:', err)
       setError('Network error');
     }
   };

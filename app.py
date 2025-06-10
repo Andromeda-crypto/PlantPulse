@@ -300,6 +300,7 @@ def save_users(users):
 
 @app.route('/signup', methods=["GET", "POST"])
 def signup():
+    print("Signup route hit")
     if request.method == "POST":
         data = request.get_json()
         username = data.get("username", "").strip()
@@ -436,6 +437,18 @@ def not_found(e):
     if os.path.exists(os.path.join(app.static_folder,'index.html')):
         return send_from_directory(app.static_folder,'index.html')
     return '404 Not Found', 404
+
+# debugging lines 
+@app.before_request
+def log_request_info():
+    print(f"\n-- Incoming {request.method} request ---")
+    print("Path:", request.path)
+    print("Headers", dict(request.headers))
+    try :
+        print("Body", request.get_json())
+    except:
+        print("NO JSON BODY")
+    print("----------------------------\n")
 
 
 
