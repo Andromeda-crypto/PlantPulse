@@ -11,7 +11,7 @@ export default function LoginForm({ onLoginSuccess }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('http://127.0.0.1:5000/login', {
+      const res = await fetch('/login', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         credentials: 'include',
@@ -19,15 +19,15 @@ export default function LoginForm({ onLoginSuccess }) {
       });
       const data = await res.json();
       if (res.ok) {
-        setUser(data);
+        setUser({ username: data.username });
         setLoading(false);
         if (onLoginSuccess) {
           onLoginSuccess(data);
         }
       } else {
-        setError(data.error || 'Login failed');
+        setError(data.message || 'Login failed');
       }
-    } catch {
+    } catch (err) {
       console.error('Login error:', err);
       setError('Network error');
     }

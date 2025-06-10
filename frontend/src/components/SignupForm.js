@@ -15,11 +15,11 @@ export default function SignupForm({ onSignupSuccess }) {
     e.preventDefault();
 
     try {
-      const res = await fetch('http://127.0.0.1:5000/signup', {
+      const res = await fetch('/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username, password, email, confirm_password: confirmPassword }),
       });
 
       const data = await res.json();
@@ -68,9 +68,9 @@ export default function SignupForm({ onSignupSuccess }) {
         onChange={(e) => setConfirmPassword(e.target.value)}
         required
       />
-      password != confirmPassword && (
-        <p className="error-message">Passwords donot match. Please try again</p>
-      )
+      { password !== confirmPassword && (
+        <p className="error-message">Passwords do not match</p>
+      )}
       <button type="submit">Sign Up</button>
       {error && <p className="error-message">{error}</p>}
     </form>

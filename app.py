@@ -329,29 +329,26 @@ def signup():
     return render_template('signup.html')
 
 
-@app.route('/login', methods=["GET", "POST"])
+@app.route('/login', methods=["POST"])
 def login():
-    if request.method == "POST":
-        data = request.get_json()
-        username = (data.get("username", "")).strip()
-        password = (data.get("password", "")).strip()
+    data = request.get_json()
+    username = data.get("username", "").strip()
+    password = data.get("password", "").strip()
 
-        if not username:
-            return jsonify({"success": False, "message": "Username is required"}), 400
-        if not password:
-            return jsonify({"success": False, "message": "Password is required"}), 400
+    if not username or not password:
+        return jsonify({"success": False, "message": "Username and password are required"}), 400
 
-        users = load_users()
-        user = users.get(username)
-        if not user:
-            return jsonify({"success": False, "message": "User Not Found"}), 404
-        
-        if not check_password_hash(user['password'],password):
-            return jsonify({"success": False, "message": "Incorrect password"}), 401
+    users = load_users()
+    user = users.get(username)
 
-        session['username'] = username
-        return jsonify({"success": True, "message": "Login successful", "username": username}), 200
-    return render_template('login.html')
+    if not user:
+        return jsonify({"success": False, "message": "User not found"}), 404
+    stored_hash = user.get("password")
+    if not check_password_hash(stored_hash, password):
+        return jsonify({"success": False, "message": "Incorrect password"}), 401
+    session['username'] = username
+    return jsonify({"success": True, "message": "Login successful", "username": username}), 200
+
 
 
 @app.route('/logout', methods=['GET', 'POST'])
@@ -426,14 +423,21 @@ def generate_alerts(data):
     return alerts
 
 @app.route('/')
-def serve():
-    return send_from_directory(app.static_folder,'index.html')
+def serve(path):
+    if path != "" and os.path.exists("frontend/build/" + path):
+        return send_from_directory('frontend/build/', path)
+    else:
+        return send_from_directory('frontend/build/','index.html')
+
+    
 
 @app.errorhandler(404)
 def not_found(e):
     if os.path.exists(os.path.join(app.static_folder,'index.html')):
         return send_from_directory(app.static_folder,'index.html')
     return '404 Not Found', 404
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)
