@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 
 
 app = Flask(__name__, static_folder='static')
-CORS(app) # Enable CORS for all routes
+CORS(app,supports_credentials=True) # Enable CORS for all routes
 app.secret_key = '_my_project_secret_key_'
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'Uploads')

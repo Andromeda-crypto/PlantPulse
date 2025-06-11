@@ -1,4 +1,5 @@
 import React from 'react';
+import { Navigate } from 'react-router-dom';
 import ZoomForm from './components/ZoomForm';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LoginForm from './components/LoginForm';
@@ -17,6 +18,7 @@ function App() {
          <AuthProvider>
         <div className="App">
           <Routes>
+            <Route path="/" element={<Navigate to="/login" />} />
             <Route path="/signup" element={<SignupForm />} />
             <Route path="/login" element={<LoginForm />} />
             {/* Protected routes */}
