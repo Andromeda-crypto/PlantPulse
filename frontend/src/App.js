@@ -18,7 +18,7 @@ function App() {
          <AuthProvider>
         <div className="App">
           <Routes>
-            <Route path="/" element={<Navigate to="/login" />} />
+            <Route path="/" element={<Navigate to="/signup" />} />
             <Route path="/signup" element={<SignupForm />} />
             <Route path="/login" element={<LoginForm />} />
             {/* Protected routes */}
