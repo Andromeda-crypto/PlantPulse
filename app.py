@@ -334,6 +334,7 @@ def signup():
 
 @app.route('/login', methods=["POST"])
 def login():
+    print("Login route called") # debugging line 
     data = request.get_json()
     username = data.get("username", "").strip()
     password = data.get("password", "").strip()
