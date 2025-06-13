@@ -301,10 +301,11 @@ def save_users(users):
 @app.route('/signup', methods=["GET", "POST"])
 def signup():
     print("Signup route hit")
-    print("Received signup POST with:", data) # debugging
+    
 
     if request.method == "POST":
         data = request.get_json()
+        print("Received signup POST with:", data) # debugging
         username = data.get("username", "").strip()
         email = (data.get("email") or "").strip()
         password = data.get("password", "").strip()
@@ -329,7 +330,8 @@ def signup():
 
         session['username'] = username
         return jsonify({"success": True, "message": "Signup successful", "username": username}), 201
-    return render_template('signup.html')
+    return jsonify({"message": "Signup endpoint. Send POST request with JSON body."}), 200
+
 
 
 @app.route('/login', methods=["POST"])
@@ -453,6 +455,12 @@ def log_request_info():
         print("NO JSON BODY")
     print("----------------------------\n")
 
+@app.route("/api/auth/user", methods=["GET"])
+def get_current_user():
+    username = session.get('username')
+    if username:
+        return jsonify({'success': True, 'username': username})
+    return jsonify({'success': False, 'message': 'Not logged in'}), 403
 
 
 if __name__ == '__main__':
