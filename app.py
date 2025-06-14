@@ -34,7 +34,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 
-app = Flask(__name__, static_folder='static')
+app = Flask(__name__, static_folder='frontecd/build', static_url_path="")
 CORS(app,supports_credentials=True) # Enable CORS for all routes
 app.secret_key = '_my_project_secret_key_'
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -78,10 +78,16 @@ def user_home():
         "status": "success"
     })
 
-
 @app.route('/')
-def home():
-    return jsonify({"message": "Welcome to Plant Monitor API"}), 200 
+@app.route('/<path:path>')
+def serve_react(path=""):
+    if path != "" and os.path.exists(os.path.join(app.static_folder,path)):
+        return send_from_directory(app.static_folder, path)
+    else:
+        return send_from_directory(app.static_folder, 'index.html')
+
+
+
 
 
 @app.route('/photo', methods=['POST'])
@@ -367,6 +373,44 @@ def logout():
 
 
 
+@app.route('/')
+def serve(path):
+    if path != "" and os.path.exists("frontend/build/" + path):
+        return send_from_directory('frontend/build/', path)
+    else:
+        return send_from_directory('frontend/build/','index.html')
+
+    
+
+@app.errorhandler(404)
+def not_found(e):
+    if os.path.exists(os.path.join(app.static_folder,'index.html')):
+        return send_from_directory(app.static_folder,'index.html')
+    return '404 Not Found', 404
+
+# debugging lines 
+@app.before_request
+def log_request_info():
+    print(f"\n-- Incoming {request.method} request ---")
+    print("Path:", request.path)
+    print("Headers", dict(request.headers))
+    try :
+        print("Body", request.get_json())
+    except:
+        print("NO JSON BODY")
+    print("----------------------------\n")
+
+@app.route("/api/auth/user", methods=["GET"])
+def get_current_user():
+    username = session.get('username')
+    if username:
+        return jsonify({'success': True, 'username': username})
+    return jsonify({'success': False, 'message': 'Not logged in'}), 403
+
+@app.route("/test")
+def test_react_serving():
+    return send_from_directory('frontend/build', 'index.html')
+
 
 def calculate_health_score(data):
     moisture_score = min(100, max(0, (data['soil_moisture'].mean() / 100) * 100))
@@ -427,40 +471,6 @@ def generate_alerts(data):
             'time': data['timestamp'].iloc[-1]
         })
     return alerts
-
-@app.route('/')
-def serve(path):
-    if path != "" and os.path.exists("frontend/build/" + path):
-        return send_from_directory('frontend/build/', path)
-    else:
-        return send_from_directory('frontend/build/','index.html')
-
-    
-
-@app.errorhandler(404)
-def not_found(e):
-    if os.path.exists(os.path.join(app.static_folder,'index.html')):
-        return send_from_directory(app.static_folder,'index.html')
-    return '404 Not Found', 404
-
-# debugging lines 
-@app.before_request
-def log_request_info():
-    print(f"\n-- Incoming {request.method} request ---")
-    print("Path:", request.path)
-    print("Headers", dict(request.headers))
-    try :
-        print("Body", request.get_json())
-    except:
-        print("NO JSON BODY")
-    print("----------------------------\n")
-
-@app.route("/api/auth/user", methods=["GET"])
-def get_current_user():
-    username = session.get('username')
-    if username:
-        return jsonify({'success': True, 'username': username})
-    return jsonify({'success': False, 'message': 'Not logged in'}), 403
 
 
 if __name__ == '__main__':

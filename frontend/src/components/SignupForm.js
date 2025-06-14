@@ -40,7 +40,7 @@ export default function SignupForm({ onSignupSuccess }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="auth-form">
+    <form onSubmit={handleSubmit} className="auth-form"> 
       <input
         type="text"
         placeholder="username"
