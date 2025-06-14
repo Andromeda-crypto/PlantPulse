@@ -34,7 +34,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 
-app = Flask(__name__, static_folder='frontecd/build', static_url_path="")
+app = Flask(__name__, static_folder='frontend/build', static_url_path="")
 CORS(app,supports_credentials=True) # Enable CORS for all routes
 app.secret_key = '_my_project_secret_key_'
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
