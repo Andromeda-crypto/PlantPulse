@@ -69,24 +69,25 @@ def load_latest_data(username=None):
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-@app.route('/home')
+'''@app.route('/home')
 def user_home():
     if "username" not in session:
         return jsonify({"Error" : "User not logged in"}), 401
     return jsonify({
         "message": f"Welcome {session['username']}!",
         "status": "success"
-    })
+    })'''
 
-@app.route('/')
-@app.route('/<path:path>')
-def serve_react(path=""):
-    if path != "" and os.path.exists(os.path.join(app.static_folder,path)):
+@app.route("/", defaults={"path": ""})
+@app.route("/<path:path>")
+def serve_react(path):
+    file_path = os.path.join(app.static_folder, path)
+    print(f"Looking for: {file_path}")  
+
+    if path != "" and os.path.exists(file_path):
         return send_from_directory(app.static_folder, path)
     else:
-        return send_from_directory(app.static_folder, 'index.html')
-
-
+        return send_from_directory(app.static_folder, "index.html")
 
 
 
@@ -370,15 +371,6 @@ def logout():
         return jsonify({'message': 'Logout successful'}), 200
     else:
         return redirect(url_for('login'))
-
-
-
-@app.route('/')
-def serve(path):
-    if path != "" and os.path.exists("frontend/build/" + path):
-        return send_from_directory('frontend/build/', path)
-    else:
-        return send_from_directory('frontend/build/','index.html')
 
     
 
