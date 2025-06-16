@@ -36,7 +36,6 @@ export const AuthProvider = ({ children }) => {
         </AuthContext.Provider>
     );
     
-    
 };
 
 // The AuthProvider component fetches the user data from the server when it mounts.
