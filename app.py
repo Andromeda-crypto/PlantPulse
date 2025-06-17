@@ -404,10 +404,10 @@ def get_current_user():
     response = jsonify({"username": "demo_user", "status": "authenticated"})
     return response, 200
 
-@app.route("/api/login", methods=["POST"])
+'''@app.route("/api/login", methods=["POST"])
 def login():
     session["user_id"]= "demo_user"
-    return jsonify({"message": "Login sucessful"}), 200
+    return jsonify({"message": "Login sucessful"}), 200'''
 
 
 @app.route("/test")
