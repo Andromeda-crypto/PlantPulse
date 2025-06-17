@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 
 
 app = Flask(__name__, static_folder='frontend/build', static_url_path="")
-CORS(app,supports_credentials=True) # Enable CORS for all routes
+CORS(app,supports_credentials=True,origins=["http://localhost:3000"]) # Enable CORS for all routes
 app.secret_key = '_my_project_secret_key_'
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'Uploads')
@@ -371,6 +371,7 @@ def logout():
         return jsonify({'message': 'Logout successful'}), 200
     else:
         return redirect(url_for('login'))
+    
 
     
 
@@ -394,9 +395,15 @@ def log_request_info():
 
 @app.route("/api/auth/user", methods=["GET"])
 def get_current_user():
-    print("Auth check triggered")
-    return jsonify({"username" : "demo_user", "status": "authenticated"}), 200
-    
+    if "user_id" in session:
+        return jsonify ({"username": session["user_id"],"status":"authenticated"}), 200
+    return jsonify({"error":"Not authenticated"})  
+
+@app.route("/api/login", methods=["POST"])
+def login():
+    session["user_id"]= "demo_user"
+    return jsonify({"message": "Login sucessful"}), 200
+
 
 @app.route("/test")
 def test_react_serving():
