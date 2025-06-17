@@ -43,6 +43,8 @@ CSV_DIR = os.path.join(BASE_DIR, 'csv runs')
 DB_PATH = os.path.join(BASE_DIR, 'plantpulse.db')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 app.config['UPLOAD_FOLDER'] = os.path.join(os.getcwd(), 'uploads')
+app.config['SESSION_COOKIE_SAMESITE'] ='LAX'
+app.config['SESSION_COOKIKE_SECURE']= False
 
 
 
