@@ -48,6 +48,7 @@ app.config['SESSION_COOKIE_SECURE']= False
 
 
 
+
 # Create directories
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(CSV_DIR, exist_ok=True)
