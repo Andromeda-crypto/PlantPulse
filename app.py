@@ -35,6 +35,8 @@ logger = logging.getLogger(__name__)
 
 
 
+
+
 app = Flask(__name__, static_folder='frontend/build', static_url_path="")
 CORS(app, origins=["http://localhost:3000"], supports_credentials=True)
 app.secret_key = '_my_project_secret_key_'
