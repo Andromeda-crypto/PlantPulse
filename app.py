@@ -27,9 +27,6 @@ from image_utils import (
     build_result_message,
     )
 
-
-
-
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
